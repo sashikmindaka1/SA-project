@@ -1,0 +1,126 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\repos\\TalentFlow.API\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\models\\evaluation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\models\\evaluation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\models\\interview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\models\\interview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|e:\\repos\\talentflow.api\\talentflow.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{39894F25-D2C9-4D34-A74F-C2AA23E1E3D2}|TalentFlow.API\\TalentFlow.API.csproj|solutionrelative:talentflow.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "WeatherForecastController.cs",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Controllers\\WeatherForecastController.cs",
+              "RelativeDocumentMoniker": "TalentFlow.API\\Controllers\\WeatherForecastController.cs",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Controllers\\WeatherForecastController.cs",
+              "RelativeToolTip": "TalentFlow.API\\Controllers\\WeatherForecastController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-19T22:08:01.846Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Program.cs",
+              "RelativeDocumentMoniker": "TalentFlow.API\\Program.cs",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Program.cs",
+              "RelativeToolTip": "TalentFlow.API\\Program.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAkwA4AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-19T21:37:01.399Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "TalentFlow.API\\Data\\AppDbContext.cs",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "TalentFlow.API\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-19T21:35:20.976Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Evaluation.cs",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Models\\Evaluation.cs",
+              "RelativeDocumentMoniker": "TalentFlow.API\\Models\\Evaluation.cs",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Models\\Evaluation.cs",
+              "RelativeToolTip": "TalentFlow.API\\Models\\Evaluation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-19T21:30:24.433Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Interview.cs",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Models\\Interview.cs",
+              "RelativeDocumentMoniker": "TalentFlow.API\\Models\\Interview.cs",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\Models\\Interview.cs",
+              "RelativeToolTip": "TalentFlow.API\\Models\\Interview.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-19T21:30:02.778Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\appsettings.json",
+              "RelativeDocumentMoniker": "TalentFlow.API\\appsettings.json",
+              "ToolTip": "E:\\repos\\TalentFlow.API\\TalentFlow.API\\appsettings.json",
+              "RelativeToolTip": "TalentFlow.API\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-19T21:37:56.026Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
