@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TalentFlow.API.Models; // This MUST match the folder name "Models"
+using TalentFlow.API.Models;
 
 namespace TalentFlow.API.Data
 {
@@ -7,7 +7,7 @@ namespace TalentFlow.API.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<Interview> Interviews { get; set; }
         public DbSet<Evaluation> Evaluations { get; set; }
+        public DbSet<Interview> Interviews { get; set; }
     }
 }

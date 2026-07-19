@@ -1,9 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-public class Interview
+﻿namespace TalentFlow.API.Models
 {
-    [Key]
-    public int Id { get; set; }
-
-    // ... your other properties ...
+    public class Interview
+    {
+        public int Id { get; set; }
+        // Add your other properties here
+    }
 }

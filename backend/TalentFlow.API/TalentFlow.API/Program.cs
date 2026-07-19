@@ -3,6 +3,15 @@ using TalentFlow.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 // DbContext Registration
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -12,8 +21,10 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+// 2. Enable the policy
+app.UseCors("AllowAll");
+
 // --- TABLE CREATION BLOCK ---
-// This ensures your SQL tables are ready as soon as the app starts
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
