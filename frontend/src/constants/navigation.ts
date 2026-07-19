@@ -5,20 +5,23 @@ import {
   Briefcase,
   BarChart3,
   Settings,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
   icon: LucideIcon;
   label: string;
-  active?: boolean;
+  path: string; // Added the path property here
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard" },
-  { icon: UserCircle2, label: "Profile", active: true },
-  { icon: Users, label: "Candidates" },
-  { icon: Briefcase, label: "Applications" },
-  { icon: BarChart3, label: "AI Analytics" },
-  { icon: Settings, label: "Settings" },
+  // Mapped out the paths for you and your team
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: UserCircle2, label: "Profile", path: "/candidate/profile" }, 
+  { icon: Users, label: "Candidates", path: "/candidates" },
+  { icon: Briefcase, label: "Applications", path: "/applications" },
+  { icon: Calendar, label: "Interviews", path: "/manager/dashboard" }, // Maps directly to your page
+  { icon: BarChart3, label: "AI Analytics", path: "/analytics" },
+  { icon: Settings, label: "Settings", path: "/settings" },
 ];

@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-talent-dark: #1A2126;
+  --color-talent-panel: #27668C;
+  --color-talent-cyan: #0CF2F2;
+  --color-talent-cyan-dark: #2CBFBF;
+  --color-talent-gold: #D9B855;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
