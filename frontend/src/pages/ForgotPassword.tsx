@@ -1,55 +1,60 @@
-import React, { useState, type ChangeEvent, type FormEvent } from 'react';
+import React, { useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 
-const ForgotPassword: React.FC = () => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState<string>('');
   const [submitted, setSubmitted] = useState<boolean>(false);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     setSubmitted(true);
-    console.log("Reset Password Link Sent to:", email);
   };
 
   return (
-    <div className="min-h-screen bg-[#0B132B] flex items-center justify-center p-4 font-sans">
-      <div className="bg-[#1C2541] p-8 rounded-2xl shadow-2xl w-full max-w-md border border-[#2A365B]">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white tracking-wide">Reset Your Password</h1>
-          <p className="text-gray-400 text-sm mt-2">
+    <div className="min-h-screen w-full bg-[#0B132B] flex items-center justify-center p-4 font-sans">
+      {/* Card Container */}
+      <div className="bg-[#1C2541] p-6 rounded-xl shadow-2xl w-full max-w-sm border border-[#2A365B]">
+        
+        {/* Header */}
+        <div className="text-center mb-5">
+          <h1 className="text-xl font-bold text-white tracking-tight">Reset Your Password</h1>
+          <p className="text-xs text-gray-400 mt-1">
             Enter your email and we'll send you instructions to reset your password.
           </p>
         </div>
 
         {submitted ? (
-          <div className="bg-[#00C896]/10 border border-[#00C896] text-[#00C896] p-4 rounded-lg text-center text-sm">
+          <div className="bg-[#00C896]/10 border border-[#00C896] text-[#00C896] p-3 rounded-md text-center text-xs">
             If an account exists with <b>{email}</b>, a reset link has been sent. Check your inbox!
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-gray-300 text-sm mb-2">Email Address</label>
+              <label className="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 placeholder="user@nsbm.ac.lk"
-                className="w-full px-4 py-3 rounded-lg bg-[#0B132B] text-white border border-[#2A365B] focus:border-[#00E5FF] focus:outline-none transition"
+                className="w-full px-3 py-2 rounded-md bg-[#0B132B] text-xs text-white border border-[#2A365B] focus:border-[#00E5FF] focus:outline-none"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-[#00C896] to-[#00E5FF] text-black font-bold rounded-lg hover:opacity-90 transition shadow-lg shadow-[#00E5FF]/20"
+              className="w-full py-2.5 bg-gradient-to-r from-[#00C896] to-[#00E5FF] text-black font-semibold text-xs rounded-md hover:opacity-90 transition shadow-md shadow-[#00E5FF]/10"
             >
               Send Reset Link
             </button>
           </form>
         )}
 
-        <div className="text-center mt-6">
-          <a href="/login" className="text-sm text-gray-400 hover:text-white transition">← Back to Login</a>
+        {/* Footer */}
+        <div className="text-center mt-5">
+          <a href="/login" className="text-xs text-gray-400 hover:text-white transition">← Back to Login</a>
         </div>
+
       </div>
     </div>
   );
