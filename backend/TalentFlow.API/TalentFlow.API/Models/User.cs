@@ -6,7 +6,7 @@ namespace TalentFlow.API.Models
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public string Role { get; set; } = "User"; // e.g., Admin, Recruiter, User
+        public string Role { get; set; } = "Candidate";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

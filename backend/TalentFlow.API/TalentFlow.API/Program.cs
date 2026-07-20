@@ -1,6 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using TalentFlow.API.Data;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using TalentFlow.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,38 +16,67 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
-// DbContext Registration - Configured for Neon PostgreSQL
+// 2. DbContext Registration - Configured for Neon PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Essential for your API to recognize your Controller classes
+// 3. JWT Authentication Setup (Fixed Default Schemes)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// Controllers setup
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// 2. Enable the policy
+// Enable CORS
 app.UseCors("AllowAll");
+
+// Ensure wwwroot directory exists before static files setup
+var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+if (!Directory.Exists(wwwrootPath))
+{
+    Directory.CreateDirectory(wwwrootPath);
+}
 
 // Serve uploaded resume files
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
+    FileProvider = new PhysicalFileProvider(wwwrootPath),
     RequestPath = ""
 });
 
-// --- AUTOMATIC MIGRATION ON STARTUP (OPTIONAL & SAFE) ---
+// Auto Migration on Startup
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Auto applies pending migrations when backend runs
     context.Database.Migrate();
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
 
-// This line is what actually makes your API endpoints reachable
+// 4. Authentication and Authorization Middleware (Order is Correct!)
+app.UseAuthentication(); // 1st: Who are you? (Extracts & checks JWT token)
+app.UseAuthorization();  // 2nd: Are you allowed? (Checks roles/permissions)
+
 app.MapControllers();
 
 app.Run();

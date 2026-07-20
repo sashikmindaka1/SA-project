@@ -39,7 +39,9 @@ namespace TalentFlow.API.Controllers
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
-                PasswordHash = passwordHash
+                PasswordHash = passwordHash,
+              
+                Role = string.IsNullOrEmpty(dto.Role) ? "Candidate" : dto.Role 
             };
 
             _context.Users.Add(user);
@@ -73,20 +75,26 @@ namespace TalentFlow.API.Controllers
             });
         }
 
-        // 3. FORGOT PASSWORD (RESET)
+        // 3. FORGOT PASSWORD (REQUEST RESET LINK / TEMP FIX)
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            
+         
             if (user == null)
             {
-                return NotFound(new { message = "User with this email does not exist!" });
+                return Ok(new { message = "If the email exists, a password reset request has been processed." });
             }
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-            await _context.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(dto.NewPassword))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Password updated successfully!" });
+            }
 
-            return Ok(new { message = "Password updated successfully!" });
+            return Ok(new { message = "Password reset request received successfully." });
         }
 
         // HELPER METHOD: Generate JWT Token
@@ -97,7 +105,7 @@ namespace TalentFlow.API.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.FullName),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role ?? "Candidate")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
@@ -107,7 +115,7 @@ namespace TalentFlow.API.Controllers
                 issuer: _configuration["JwtSettings:Issuer"],
                 audience: _configuration["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(7), // Token expires in 7 days
+                expires: DateTime.UtcNow.AddDays(7),
                 signingCredentials: creds
             );
 
