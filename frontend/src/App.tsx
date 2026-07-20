@@ -1,11 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Member 01 Pages (Auth)
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
-// Member 02 & Member 06 Pages
+
 import CandidateProfilePage from './pages/CandidateProfilePage';
 import HiringManagerDashboard from './pages/HiringManagerDashboard';
 
