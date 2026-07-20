@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TopBar from "../components/common/TopBar";
 import SideNav from "../components/common/SideNav";
 import StepIndicator from "../components/common/StepIndicator";
@@ -16,16 +16,42 @@ import {
   type StepId,
 } from "../types/candidateProfile";
 
-/**
- * Swap this for a real API call, e.g.:
- *   const fd = new FormData();
- *   if (data.file) fd.append("resume", data.file);
- *   fd.append("profile", JSON.stringify({ ...rest }));
- *   await fetch("/api/candidates/profile", { method: "POST", body: fd });
- */
 async function saveProfile(data: CandidateProfileFormData): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 900));
-  console.log("Saving candidate profile:", data);
+  const formData = new FormData();
+
+  formData.append("fullName", data.fullName || "");
+  formData.append("title", data.title || "");
+  formData.append("email", data.email || "");
+  formData.append("phone", data.phone || "");
+  formData.append("location", data.location || "");
+  formData.append("yearsExperience", data.yearsExperience.toString());
+  formData.append("summary", data.summary || "");
+  
+  formData.append("skills",
+    JSON.stringify(data.skills || [])
+  );
+
+  if (data.file) {
+    formData.append("resume", data.file);
+  }
+
+  const API_BASE = "http://localhost:5016"; // Update if your backend port is different
+  
+  console.log("Calling API:", `${API_BASE}/api/CandidateProfile`);
+  const response = await fetch(`${API_BASE}/api/CandidateProfile`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to save: ${response.status} ${errorText}`);
+  }
+
+  const result = await response.json();
+
+  console.log("✅ Profile saved successfully!");
+  console.log(result);
 }
 
 export default function CandidateProfilePage() {
@@ -35,16 +61,12 @@ export default function CandidateProfilePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const hasLoadedDraft = useRef(false);
 
-  // Restore a saved draft on first mount (resume file itself can't be
-  // persisted — see utils/localStorageDraft.ts).
   useEffect(() => {
     const draft = loadDraft();
     setProfile((prev) => ({ ...prev, ...draft }));
     hasLoadedDraft.current = true;
   }, []);
 
-  // Persist the draft whenever the profile changes, once the initial
-  // load has completed (avoids immediately re-saving the empty default).
   useEffect(() => {
     if (!hasLoadedDraft.current || isSubmitted) return;
     const { file, ...draftable } = profile;
@@ -67,30 +89,34 @@ export default function CandidateProfilePage() {
   };
 
   const handleFinalSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      await saveProfile(profile);
-      setIsSubmitted(true);
-      clearDraft();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  console.log("PROFILE:", profile);
 
-  // "Edit profile" from the success screen — keeps the entered data,
-  // just drops back into edit mode instead of wiping the form.
+  setIsSubmitting(true);
+
+  try {
+    await saveProfile(profile);
+
+    console.log("SUCCESS");
+
+    setIsSubmitted(true);
+    clearDraft();
+  } catch (error) {
+    console.error("SUBMIT ERROR:", error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const handleStartNewProfile = () => {
     setIsSubmitted(false);
     setStep("personal");
   };
 
-  const initials =
-    profile.fullName
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "SP";
+  const initials = profile.fullName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "SP";
 
   return (
     <div className="min-h-screen w-full flex flex-col" style={{ backgroundColor: COLORS.bg }}>

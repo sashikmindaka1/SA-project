@@ -7,7 +7,10 @@ namespace TalentFlow.API.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<User> Users { get; set; }
+
         public DbSet<Evaluation> Evaluations { get; set; }
         public DbSet<Interview> Interviews { get; set; }
+        public DbSet<CandidateProfile> CandidateProfiles { get; set; }
     }
 }

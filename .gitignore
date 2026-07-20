@@ -1,0 +1,16 @@
+# VS Code
+.vscode/
+
+# .NET build output
+bin/
+obj/
+
+# Uploaded files
+wwwroot/uploads/
+
+# User files
+*.user
+*.suo
+
+# Logs
+*.log
