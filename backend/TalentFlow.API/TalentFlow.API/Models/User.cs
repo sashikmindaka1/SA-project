@@ -8,5 +8,7 @@ namespace TalentFlow.API.Models
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = "Candidate";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
     }
 }

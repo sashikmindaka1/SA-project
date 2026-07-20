@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using TalentFlow.API.Data;
+using TalentFlow.API.Services; // 1. EmailService Namespace එක Import කළා
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// 4. Register Custom Services (EmailService)
+builder.Services.AddScoped<EmailService>();
+
 // Controllers setup
 builder.Services.AddControllers();
 
@@ -73,9 +77,9 @@ using (var scope = app.Services.CreateScope())
 
 app.UseHttpsRedirection();
 
-// 4. Authentication and Authorization Middleware (Order is Correct!)
-app.UseAuthentication(); // 1st: Who are you? (Extracts & checks JWT token)
-app.UseAuthorization();  // 2nd: Are you allowed? (Checks roles/permissions)
+// 5. Authentication and Authorization Middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
