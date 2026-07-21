@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
-
+import ResetPassword from './pages/ResetPassword'; // 1. Import කළා
 
 import CandidateProfilePage from './pages/CandidateProfilePage';
 import HiringManagerDashboard from './pages/HiringManagerDashboard';
@@ -19,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} /> {/* 2. Reset Password Route එක එකතු කළා */}
 
         {/* Member 02's Route */}
         <Route path="/candidate/profile" element={<CandidateProfilePage />} />
