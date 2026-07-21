@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
 import {
   Search,
   Bell,
@@ -618,7 +620,20 @@ export default function ApplicationTrackingFlow() {
   const activePath = location.pathname;
 
   const [applications, setApplications] =
-    useState<JobApplication[]>(seedApplications);
+    useState<JobApplication[]>([]);
+
+  
+useEffect(() => {
+  axios
+    .get("http://localhost:5016/api/Applications")
+    .then((res) => {
+      console.log("Applications:", res.data);
+      setApplications(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+}, []);
 
   const isRecruiterView =
     activePath === "/candidates";

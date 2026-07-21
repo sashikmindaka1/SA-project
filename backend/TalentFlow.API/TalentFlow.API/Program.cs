@@ -49,6 +49,11 @@ builder.Services.AddScoped<EmailService>();
 // Controllers setup
 builder.Services.AddControllers();
 
+
+builder.Services.AddScoped<IApplicationService,
+                           ApplicationService>();
+
+
 // Swagger Services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

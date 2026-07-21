@@ -12,5 +12,7 @@ namespace TalentFlow.API.Data
         public DbSet<Evaluation> Evaluations { get; set; }
         public DbSet<Interview> Interviews { get; set; }
         public DbSet<CandidateProfile> CandidateProfiles { get; set; }
+
+        public DbSet<Application> Applications { get; set; }
     }
 }
