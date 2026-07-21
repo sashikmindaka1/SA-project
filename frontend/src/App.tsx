@@ -9,6 +9,10 @@ import CandidateProfilePage from './pages/CandidateProfilePage';
 import HiringManagerDashboard from './pages/HiringManagerDashboard';
 import ApplicationTrackingFlow from './pages/ApplicationTrackingFlow';
 
+import CandidateJobSearchPage from "./pages/CandidateJobSearchPage";
+import RecruiterJobPostingPage from "./pages/RecruiterJobPostingPage";
+
+
 
 function App() {
   return (
@@ -32,6 +36,10 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
         <Route path="/applications"element={<ApplicationTrackingFlow />} />
         <Route path="/candidates"element={<ApplicationTrackingFlow />} />
+        
+        <Route path="/candidatejobs" element={<CandidateJobSearchPage />} />
+        <Route path="/recruiter" element={<RecruiterJobPostingPage />} />
+
 
       </Routes>
     </BrowserRouter>
