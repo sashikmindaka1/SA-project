@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Defines the TypeScript interface for form state
 interface LoginFormData {
@@ -8,6 +9,8 @@ interface LoginFormData {
 }
 
 const Login = () => {
+  const navigate = useNavigate();
+
   // Local state for form inputs, request loading, and alert messages
   const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [loading, setLoading] = useState<boolean>(false);
@@ -49,11 +52,26 @@ const Login = () => {
 
       setSuccessMsg('Login successful! Redirecting...');
       
-      // Redirect user to the dashboard after a short delay
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
+      // Redirect user based on role (or directly to Hiring Manager Dashboard)
+      // Redirect user to the dashboard
+    setTimeout(() => {
+  // Backend එකෙන් එන User Object එකෙන් Role එක ගන්නවා (Upper/Lower case issues නොවෙන්න toUpperCase කරයි)
+  const rawRole = data.user?.role || data.user?.Role || '';
+  const userRole = rawRole.toUpperCase();
 
+  console.log("Logged User Role:", userRole); // Debug කරලා බලන්න Browser Console එකෙන්
+
+  if (userRole === 'HIRING_MANAGER' || userRole === 'RECRUITER' || userRole === 'MANAGER') {
+    // Recruiter / Hiring Manager විතරක් Manager Dashboard එකට
+    navigate('/manager/dashboard');
+  } else if (userRole === 'CANDIDATE') {
+    // Candidate ව Candidate Profile Page එකට
+    navigate('/candidate/profile');
+  } else {
+    // වෙනත් Role එකක් ආවොත් Profile එකට
+    navigate('/candidate/profile');
+  }
+}, 1000);
     } catch (err: any) {
       // Catch network or validation errors
       setErrorMsg(err.message || 'Something went wrong. Please try again!');
