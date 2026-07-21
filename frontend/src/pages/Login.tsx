@@ -55,20 +55,20 @@ const Login = () => {
       // Redirect user based on role (or directly to Hiring Manager Dashboard)
       // Redirect user to the dashboard
     setTimeout(() => {
-  // Backend එකෙන් එන User Object එකෙන් Role එක ගන්නවා (Upper/Lower case issues නොවෙන්න toUpperCase කරයි)
+
   const rawRole = data.user?.role || data.user?.Role || '';
   const userRole = rawRole.toUpperCase();
 
-  console.log("Logged User Role:", userRole); // Debug කරලා බලන්න Browser Console එකෙන්
+
 
   if (userRole === 'HIRING_MANAGER' || userRole === 'RECRUITER' || userRole === 'MANAGER') {
-    // Recruiter / Hiring Manager විතරක් Manager Dashboard එකට
+
     navigate('/manager/dashboard');
   } else if (userRole === 'CANDIDATE') {
-    // Candidate ව Candidate Profile Page එකට
+
     navigate('/candidate/profile');
   } else {
-    // වෙනත් Role එකක් ආවොත් Profile එකට
+    // 
     navigate('/candidate/profile');
   }
 }, 1000);
