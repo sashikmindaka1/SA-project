@@ -1,80 +1,78 @@
 using Microsoft.AspNetCore.Mvc;
-using TalentFlow.API.DTOs;
-using TalentFlow.API.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using TalentFlow.API.Data;
+using TalentFlow.API.Models;
 
 namespace TalentFlow.API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class ApplicationsController : ControllerBase
     {
-        private readonly IApplicationService _service;
+        private readonly AppDbContext _context;
 
-        public ApplicationsController(
-            IApplicationService service)
+        public ApplicationsController(AppDbContext context)
         {
-            _service = service;
+            _context = context;
         }
 
+        // GET: api/Applications
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<object>>> GetApplications()
         {
-            return Ok(
-                await _service.GetAllApplications());
-        }
+            var applications = await _context.Applications.ToListAsync();
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var application =
-                await _service.GetApplicationById(id);
-
-            if (application == null)
+            var result = applications.Select(app => new
             {
-                return NotFound();
-            }
-
-            return Ok(application);
-        }
-
-        [HttpGet("candidate/{candidateId}")]
-        public async Task<IActionResult> GetByCandidate(
-            int candidateId)
-        {
-            return Ok(
-                await _service.GetApplicationsByCandidate(
-                    candidateId));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(
-            CreateApplicationDto dto)
-        {
-            var result =
-                await _service.CreateApplication(dto);
+                id = app.Id.ToString(),
+                candidate = app.Candidate,
+                initials = app.Initials,
+                email = app.Email,
+                role = app.Role,
+                matchScore = app.MatchScore,
+                appliedOn = app.AppliedOn,
+                status = app.Status,
+                skills = ParseSkills(app.Skills),
+                note = app.Note
+            }).ToList();
 
             return Ok(result);
         }
 
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(
-            int id,
-            UpdateApplicationStatusDto dto)
+        // Helper method to safely parse skills whether they are stored as JSON or comma-separated text
+        private List<string> ParseSkills(string? skillsStr)
         {
-            var updated =
-                await _service.UpdateStatus(
-                    id,
-                    dto.Status);
+            if (string.IsNullOrEmpty(skillsStr))
+                return new List<string>();
 
-            if (!updated)
+            skillsStr = skillsStr.Trim();
+
+            // If it starts with '[', try parsing it as a JSON array
+            if (skillsStr.StartsWith("["))
             {
-                return NotFound();
+                try
+                {
+                    return JsonSerializer.Deserialize<List<string>>(skillsStr) ?? new List<string>();
+                }
+                catch
+                {
+                    // Fallback if JSON parsing fails
+                }
             }
 
-            return Ok(new
-            {
-                Message = "Status updated successfully"
-            });
+            // Otherwise, treat it as a standard comma-separated string (e.g. "React, Spring Boot")
+            return skillsStr.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+        }
+
+        // POST: api/Applications
+        [HttpPost]
+        public async Task<ActionResult<Application>> PostApplication(Application application)
+        {
+            _context.Applications.Add(application);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetApplications), new { id = application.Id }, application);
         }
     }
 }
