@@ -10,7 +10,7 @@ import ApplicationTrackingFlow from './pages/ApplicationTrackingFlow';
 
 import CandidateJobSearchPage from "./pages/CandidateJobSearchPage";
 import RecruiterJobPostingPage from "./pages/RecruiterJobPostingPage";
-
+import NewCandidatePage from './pages/NewCandidatePage';
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +26,7 @@ function App() {
         {/* Member 02's Route */}
         <Route path="/candidate/profile" element={<CandidateProfilePage />} />
         
+        <Route path="/newCandidates" element={<NewCandidatePage />} />
         {/* Member 06's Route (Your Route!) */}
         <Route path="/manager/dashboard" element={<HiringManagerDashboard />} />
 
