@@ -8,7 +8,8 @@ export default function UpcomingInterviews() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('https://localhost:7083/api/Interview')
+    // UPDATED: Now pointing to the correct HTTP port 5016!
+    fetch('http://localhost:5016/api/Interview')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch interviews from backend.');
         return res.json();
@@ -20,7 +21,7 @@ export default function UpcomingInterviews() {
       .catch((err) => {
         console.error(err);
         setError('Could not connect to the API server.');
-        setLoading(false);
+        setTimeout(() => setLoading(false), 500); // Small delay to prevent flashing
       });
   }, []);
 

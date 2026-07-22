@@ -12,7 +12,8 @@ export default function EvaluationForm() {
 
   // Fetch list of candidates/interviews on load to populate the dropdown
   useEffect(() => {
-    fetch('https://localhost:7083/api/Interview')
+    // UPDATED: Now pointing to HTTP and port 5016
+    fetch('http://localhost:5016/api/Interview')
       .then((res) => res.json())
       .then((data) => setCandidates(data))
       .catch((err) => console.error('Failed to load candidates', err));
@@ -35,7 +36,8 @@ export default function EvaluationForm() {
     setSubmitting(true);
 
     try {
-      const response = await fetch('https://localhost:7083/api/Evaluation', {
+      // UPDATED: Now pointing to HTTP and port 5016
+      const response = await fetch('http://localhost:5016/api/Evaluation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,6 +53,7 @@ export default function EvaluationForm() {
 
       if (response.ok) {
         alert('Official evaluation saved for ' + selectedCandidate + '!');
+        // Optional: Reset form fields here if you want
       }
     } catch (err) {
       console.error('Failed to submit evaluation', err);

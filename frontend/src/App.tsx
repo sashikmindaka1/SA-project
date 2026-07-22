@@ -4,15 +4,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 
-
 import CandidateProfilePage from './pages/CandidateProfilePage';
 import HiringManagerDashboard from './pages/HiringManagerDashboard';
 import ApplicationTrackingFlow from './pages/ApplicationTrackingFlow';
 
 import CandidateJobSearchPage from "./pages/CandidateJobSearchPage";
 import RecruiterJobPostingPage from "./pages/RecruiterJobPostingPage";
-
-
 
 function App() {
   return (
@@ -29,18 +26,18 @@ function App() {
         {/* Member 02's Route */}
         <Route path="/candidate/profile" element={<CandidateProfilePage />} />
         
-        {/* Member 06's Route */}
+        {/* Member 06's Route (Your Route!) */}
         <Route path="/manager/dashboard" element={<HiringManagerDashboard />} />
 
-        {/* Fallback Route for Undefined Paths */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-        <Route path="/applications"element={<ApplicationTrackingFlow />} />
-        <Route path="/candidates"element={<ApplicationTrackingFlow />} />
+        {/* Team Routes */}
+        <Route path="/applications" element={<ApplicationTrackingFlow />} />
+        <Route path="/candidates" element={<ApplicationTrackingFlow />} />
         
         <Route path="/candidatejobs" element={<CandidateJobSearchPage />} />
         <Route path="/recruiter" element={<RecruiterJobPostingPage />} />
 
-
+        {/* Fallback Route MUST be at the very bottom! */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+
 import UpcomingInterviews from '../components/hiring-manager/UpcomingInterviews';
 import EvaluationForm from '../components/hiring-manager/EvaluationForm';
 import ScheduleInterviewModal from '../components/hiring-manager/ScheduleInterviewModal';
+import SideNav from '../components/common/SideNav'; // <-- 1. WE MUST IMPORT IT HERE
 import { Search, Bell, User as UserIcon, CalendarDays, Clock, Target, TrendingUp } from 'lucide-react';
 
 export default function HiringManagerDashboard() {
@@ -14,7 +16,8 @@ export default function HiringManagerDashboard() {
   });
 
   useEffect(() => {
-    fetch('https://localhost:7083/api/Interview/stats')
+    // 2. Ensuring it points to the correct HTTP port
+    fetch('http://localhost:5016/api/Interview/stats') 
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard stats');
         return res.json();
@@ -61,53 +64,60 @@ export default function HiringManagerDashboard() {
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <div className="p-8 flex-1">
+      {/* 3. THIS IS THE NEW WRAPPER FOR THE SIDEBAR AND MAIN CONTENT */}
+      <div className="flex flex-1 overflow-hidden">
         
-        {/* Header Section */}
-        <div className="flex justify-between items-end pb-6 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-wide">Interview Management</h1>
-            <p className="text-slate-400 mt-2 text-sm">Schedule, evaluate, and orchestrate candidate sequences.</p>
-          </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-cyan-500/10 border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-[#0b111a] font-semibold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] flex items-center gap-2"
-          >
-            <CalendarDays className="w-4 h-4" />
-            Schedule Interview
-          </button>
-        </div>
+        {/* 4. WE PLACE THE SIDEBAR HERE */}
+        <SideNav />
 
-        {/* KPI Metrics Ribbon */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[
-            { label: 'Pending Evaluations', value: stats.pendingEvaluations, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-            { label: 'Interviews Today', value: stats.interviewsToday, icon: CalendarDays, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
-            { label: 'Avg Match Score', value: `${stats.avgMatchScore}%`, icon: Target, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-            { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-          ].map((kpi, index) => (
-            <div key={index} className="bg-[#131b26] border border-slate-800 rounded-xl p-5 flex items-center justify-between shadow-lg">
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-1">{kpi.label}</div>
-                <div className="text-2xl font-bold text-white">{kpi.value}</div>
-              </div>
-              <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center`}>
-                <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-              </div>
+        {/* 5. MAIN CONTENT AREA (Now pushed to the right) */}
+        <main className="p-8 flex-1 overflow-y-auto">
+          
+          {/* Header Section */}
+          <div className="flex justify-between items-end pb-6 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-wide">Interview Management</h1>
+              <p className="text-slate-400 mt-2 text-sm">Schedule, evaluate, and orchestrate candidate sequences.</p>
             </div>
-          ))}
-        </div>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-cyan-500/10 border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-[#0b111a] font-semibold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] flex items-center gap-2"
+            >
+              <CalendarDays className="w-4 h-4" />
+              Schedule Interview
+            </button>
+          </div>
 
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <div className="col-span-2">
-              <UpcomingInterviews />
-           </div>
-           <div>
-              <EvaluationForm />
-           </div>
-        </div>
+          {/* KPI Metrics Ribbon */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[
+              { label: 'Pending Evaluations', value: stats.pendingEvaluations, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+              { label: 'Interviews Today', value: stats.interviewsToday, icon: CalendarDays, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+              { label: 'Avg Match Score', value: `${stats.avgMatchScore}%`, icon: Target, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+              { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+            ].map((kpi, index) => (
+              <div key={index} className="bg-[#131b26] border border-slate-800 rounded-xl p-5 flex items-center justify-between shadow-lg">
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-1">{kpi.label}</div>
+                  <div className="text-2xl font-bold text-white">{kpi.value}</div>
+                </div>
+                <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center`}>
+                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+             <div className="col-span-2">
+                <UpcomingInterviews />
+             </div>
+             <div>
+                <EvaluationForm />
+             </div>
+          </div>
+        </main>
       </div>
 
       <ScheduleInterviewModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
