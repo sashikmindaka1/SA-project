@@ -1,11 +1,18 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { COLORS } from "../../constants/theme";
 import { NAV_ITEMS } from "../../constants/navigation";
 
-export default function SideNav() {
+// 1. Props සඳහා Types define කරන්න
+interface SideNavProps {
+  activeItem?: string;
+  userRole?: string;
+}
+
+// 2. Component එකට Props ගන්න
+export default function SideNav({ activeItem, userRole }: SideNavProps) {
   const navigate = useNavigate();
-  const location = useLocation(); // This grabs the current URL (e.g., "/manager/dashboard")
+  const location = useLocation();
 
   return (
     <div
@@ -13,8 +20,8 @@ export default function SideNav() {
       style={{ backgroundColor: COLORS.bg, borderRight: `1px solid ${COLORS.border}` }}
     >
       {NAV_ITEMS.map(({ icon: Icon, label, path }) => {
-        // DYNAMIC CHECK: Does the current browser URL match this item's path?
-        const isActive = location.pathname === path;
+        // activeItem එක pass කර ඇත්නම් එය බලයි, නැතහොත් URL එක බලයි
+        const isActive = activeItem ? activeItem === label : location.pathname === path;
 
         return (
           <div
