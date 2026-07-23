@@ -1,4 +1,3 @@
-// src/components/JobCard.tsx
 import { MapPin, Briefcase, Clock, Bookmark } from "lucide-react";
 import type { Job } from "../../types/job";
 
@@ -11,8 +10,12 @@ interface JobCardProps {
   onToggleSave?: (job: Job) => void;
 }
 
-function timeAgo(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+function timeAgo(iso?: string): string {
+  if (!iso) return "Recently";
+  const timestamp = new Date(iso).getTime();
+  if (isNaN(timestamp)) return "Recently";
+
+  const days = Math.floor((Date.now() - timestamp) / 86_400_000);
   if (days <= 0) return "Today";
   if (days === 1) return "1 day ago";
   if (days < 30) return `${days} days ago`;
@@ -39,7 +42,9 @@ export default function JobCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[15px] font-semibold text-white">{job.title}</h3>
+          <h3 className="truncate text-[15px] font-semibold text-white">
+            {job.title}
+          </h3>
           <p className="mt-0.5 text-sm text-[#8A9199]">{job.department}</p>
         </div>
 
@@ -81,8 +86,9 @@ export default function JobCard({
         </span>
       </div>
 
+      {/* SKILLS SAFE RENDER */}
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {job.skills.slice(0, 4).map((skill) => (
+        {(job.skills || []).slice(0, 4).map((skill) => (
           <span
             key={skill}
             className="rounded-md bg-[#27668C]/25 px-2 py-0.5 text-[11px] font-medium text-[#6FB4DD]"
@@ -92,9 +98,16 @@ export default function JobCard({
         ))}
       </div>
 
+      {/* SALARY SAFE RENDER (No Crash Here) */}
       <div className="mt-3 text-sm font-medium text-[#2CBFBF]">
-        {job.salary.currency} {job.salary.min.toLocaleString()}–{job.salary.max.toLocaleString()}
-        <span className="text-[#8A9199] font-normal"> /mo</span>
+        {job.salary ? (
+          <>
+            {job.salary.currency || "$"} {job.salary.min?.toLocaleString() || 0}–{job.salary.max?.toLocaleString() || 0}
+            <span className="text-[#8A9199] font-normal"> /mo</span>
+          </>
+        ) : (
+          <span className="text-[#8A9199] font-normal text-xs">Salary Undisclosed</span>
+        )}
       </div>
     </button>
   );

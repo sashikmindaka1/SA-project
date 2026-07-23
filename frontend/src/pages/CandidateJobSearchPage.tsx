@@ -6,7 +6,8 @@ import {
   type SetStateAction,
   type ReactNode,
 } from "react";
-import { Search, SlidersHorizontal, MapPin, Briefcase, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, Briefcase, Loader2, Bookmark, Bell } from "lucide-react";
+import SideNav from "../components/common/SideNav";
 import type {
   Job,
   JobSearchFilters,
@@ -17,6 +18,19 @@ import type {
 import { EMPTY_FILTERS } from "../types/job";
 import { searchJobs } from "../api/jobsApi";
 import JobCard from "../components/job/JobCard";
+
+// ---------------------------------------------------------------------------
+// Design tokens — Dark Cyberpunk Theme
+// ---------------------------------------------------------------------------
+const C = {
+  bg: "#080c10",
+  panel: "#0d1318",
+  panelAlt: "#121922",
+  border: "rgba(255,255,255,0.06)",
+  text: "#FFFFFF",
+  textDim: "#5c7086",
+  teal: "#22d9d9",
+} as const;
 
 const WORK_MODES: WorkMode[] = ["On-site", "Hybrid", "Remote"];
 const EMPLOYMENT_TYPES: EmploymentType[] = ["Full-time", "Part-time", "Contract", "Internship"];
@@ -33,22 +47,26 @@ export default function CandidateJobSearchPage() {
   useEffect(() => {
     setLoading(true);
     const handle = setTimeout(() => {
-      searchJobs(filters).then((results) => {
-        setJobs(results);
-        setLoading(false);
-        setSelected((current) =>
-          current && results.some((r) => r.id === current.id) ? current : results[0] ?? null
-        );
-      });
-    }, 250); // debounce keyword typing
+      searchJobs(filters)
+        .then((results) => {
+          const safeResults = results || [];
+          setJobs(safeResults);
+          setSelected((current) =>
+            current && safeResults.some((r) => r.id === current.id) ? current : safeResults[0] ?? null
+          );
+        })
+        .catch((err) => console.error("Search failed:", err))
+        .finally(() => setLoading(false));
+    }, 250);
+
     return () => clearTimeout(handle);
   }, [filters]);
 
   const activeFilterCount = useMemo(
     () =>
-      filters.workMode.length +
-      filters.employmentType.length +
-      filters.experienceLevel.length +
+      (filters.workMode?.length || 0) +
+      (filters.employmentType?.length || 0) +
+      (filters.experienceLevel?.length || 0) +
       (filters.minSalary > 0 ? 1 : 0),
     [filters]
   );
@@ -58,7 +76,7 @@ export default function CandidateJobSearchPage() {
     value: JobSearchFilters[K][number]
   ) {
     setFilters((f) => {
-      const current = f[key] as string[];
+      const current = (f[key] as string[]) || [];
       const next = current.includes(value as string)
         ? current.filter((v) => v !== value)
         : [...current, value as string];
@@ -75,114 +93,184 @@ export default function CandidateJobSearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1A2126] text-white">
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <header>
-          <h1 className="text-2xl font-semibold">Find your next role</h1>
-          <p className="mt-1 text-sm text-[#8A9199]">
-            {loading ? "Searching…" : `${jobs.length} open roles match your search`}
-          </p>
-        </header>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#5C636B]"
-            />
-            <input
-              className="input pl-9"
-              placeholder="Search by title or skill — e.g. React, Data Analyst"
-              value={filters.keyword}
-              onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))}
-            />
-          </div>
-          <div className="relative sm:w-56">
-            <MapPin
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#5C636B]"
-            />
-            <input
-              className="input pl-9"
-              placeholder="Location"
-              value={filters.location}
-              onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value }))}
-            />
-          </div>
-          <button
-            onClick={() => setFiltersOpen((v) => !v)}
-            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium sm:w-auto ${
-              activeFilterCount
-                ? "border-[#0CF2F2]/40 bg-[#0CF2F2]/10 text-[#0CF2F2]"
-                : "border-white/10 text-[#8A9199] hover:bg-white/5"
-            }`}
+    <div className="w-full min-h-screen flex flex-col font-sans" style={{ background: C.bg, color: C.text }}>
+      {/* Top Header / App Bar */}
+      <nav
+        className="w-full px-8 py-4 border-b sticky top-0 z-20 backdrop-blur-md flex justify-between items-center"
+        style={{ borderColor: C.border, background: `${C.bg}EE` }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-base shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`, color: "#08101b" }}
           >
-            <SlidersHorizontal size={15} />
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="rounded-full bg-[#0CF2F2] px-1.5 text-xs font-semibold text-[#0B1416]">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
+            TF
+          </div>
+          <span className="font-extrabold tracking-tight text-lg" style={{ color: C.text }}>
+            Talent<span style={{ color: C.teal }}>Flow</span> AI
+          </span>
         </div>
 
-        {filtersOpen && (
-          <FilterPanel
-            filters={filters}
-            setFilters={setFilters}
-            toggleArrayFilter={toggleArrayFilter}
-            onClear={() => setFilters(EMPTY_FILTERS)}
-          />
-        )}
+        <div className="flex items-center gap-4">
+          <div
+            className="p-2.5 rounded-xl border shrink-0 cursor-pointer"
+            style={{ background: C.panel, borderColor: C.border }}
+          >
+            <Bell size={18} style={{ color: C.textDim }} />
+          </div>
+          <div className="flex items-center gap-3 pl-3 border-l" style={{ borderColor: C.border }}>
+            <div
+              className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}
+            >
+              JS
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
-          <div className="space-y-3">
-            {loading ? (
-              <div className="flex items-center justify-center gap-2 py-16 text-[#8A9199]">
-                <Loader2 className="animate-spin" size={18} /> Loading roles…
-              </div>
-            ) : jobs.length === 0 ? (
-              <EmptyResults onClear={() => setFilters(EMPTY_FILTERS)} />
-            ) : (
-              jobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  selected={selected?.id === job.id}
-                  saved={savedIds.has(job.id)}
-                  onSelect={setSelected}
-                  onToggleSave={toggleSave}
+      {/* Main Layout Body */}
+      <div className="flex flex-1 overflow-hidden">
+        <SideNav />
+
+        <main className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Header Title */}
+            <header>
+              <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: C.text }}>
+                Find your next role
+              </h1>
+              <p className="mt-1.5 text-sm" style={{ color: C.textDim }}>
+                {loading ? "Searching..." : `${jobs.length} open roles match your criteria`}
+              </p>
+            </header>
+
+            {/* Search and Filters Bar */}
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search
+                  size={16}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2"
+                  style={{ color: C.textDim }}
                 />
-              ))
-            )}
-          </div>
-
-          <div className="hidden lg:block">
-            {selected ? (
-              <JobDetail job={selected} saved={savedIds.has(selected.id)} onToggleSave={toggleSave} />
-            ) : (
-              <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-[#8A9199]">
-                Select a role to see details
+                <input
+                  className="tf-input pl-10"
+                  placeholder="Search by title or skill — e.g. React, Spring Boot"
+                  value={filters.keyword}
+                  onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))}
+                />
               </div>
+
+              <div className="relative sm:w-56">
+                <MapPin
+                  size={16}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2"
+                  style={{ color: C.textDim }}
+                />
+                <input
+                  className="tf-input pl-10"
+                  placeholder="Location"
+                  value={filters.location}
+                  onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value }))}
+                />
+              </div>
+
+              <button
+                onClick={() => setFiltersOpen((v) => !v)}
+                className="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all"
+                style={{
+                  background: activeFilterCount ? `${C.teal}15` : C.panel,
+                  borderColor: activeFilterCount ? `${C.teal}40` : C.border,
+                  color: activeFilterCount ? C.teal : C.text,
+                }}
+              >
+                <SlidersHorizontal size={15} />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                    style={{ background: C.teal, color: "#08101b" }}
+                  >
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Expandable Filter Panel */}
+            {filtersOpen && (
+              <FilterPanel
+                filters={filters}
+                setFilters={setFilters}
+                toggleArrayFilter={toggleArrayFilter}
+                onClear={() => setFilters(EMPTY_FILTERS)}
+              />
             )}
+
+            {/* Content Area: Cards List + Selected Job Detail View */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr] items-start">
+              {/* Jobs List */}
+              <div className="space-y-3">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center gap-2 py-20" style={{ color: C.teal }}>
+                    <Loader2 className="animate-spin" size={24} />
+                    <span className="text-xs font-semibold" style={{ color: C.textDim }}>
+                      Fetching matching roles...
+                    </span>
+                  </div>
+                ) : jobs.length === 0 ? (
+                  <EmptyResults onClear={() => setFilters(EMPTY_FILTERS)} />
+                ) : (
+                  jobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      selected={selected?.id === job.id}
+                      saved={savedIds.has(job.id)}
+                      onSelect={setSelected}
+                      onToggleSave={toggleSave}
+                    />
+                  ))
+                )}
+              </div>
+
+              {/* Selected Job Sticky Details */}
+              <div className="hidden lg:block sticky top-6">
+                {selected ? (
+                  <JobDetail job={selected} saved={savedIds.has(selected.id)} onToggleSave={toggleSave} />
+                ) : (
+                  <div
+                    className="flex h-64 items-center justify-center rounded-2xl border border-dashed text-sm"
+                    style={{ borderColor: C.border, color: C.textDim }}
+                  >
+                    Select a role to preview full details
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
 
       <style>{`
-        .input {
+        .tf-input {
           width: 100%;
-          background: #20272D;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 0.5rem;
-          padding: 0.6rem 0.75rem;
-          font-size: 0.875rem;
-          color: white;
+          background: ${C.panelAlt};
+          border: 1px solid ${C.border};
+          border-radius: 0.75rem;
+          padding: 0.65rem 0.85rem;
+          font-size: 0.8125rem;
+          color: ${C.text};
           outline: none;
+          transition: all 0.2s ease;
         }
-        .input:focus { border-color: #0CF2F2; }
-        .input::placeholder { color: #5C636B; }
+        .tf-input:focus {
+          border-color: ${C.teal};
+          box-shadow: 0 0 0 1px ${C.teal}40;
+        }
+        .tf-input::placeholder {
+          color: ${C.textDim};
+        }
       `}</style>
     </div>
   );
@@ -200,14 +288,17 @@ interface FilterPanelProps {
 
 function FilterPanel({ filters, setFilters, toggleArrayFilter, onClear }: FilterPanelProps) {
   return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-[#20272D] p-5">
+    <div
+      className="rounded-2xl border p-5 shadow-2xl transition-all"
+      style={{ background: C.panel, borderColor: C.border }}
+    >
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <FilterGroup label="Work mode">
           {WORK_MODES.map((mode) => (
             <Chip
               key={mode}
               label={mode}
-              active={filters.workMode.includes(mode)}
+              active={filters.workMode?.includes(mode)}
               onClick={() => toggleArrayFilter("workMode", mode)}
             />
           ))}
@@ -218,7 +309,7 @@ function FilterPanel({ filters, setFilters, toggleArrayFilter, onClear }: Filter
             <Chip
               key={type}
               label={type}
-              active={filters.employmentType.includes(type)}
+              active={filters.employmentType?.includes(type)}
               onClick={() => toggleArrayFilter("employmentType", type)}
             />
           ))}
@@ -229,31 +320,32 @@ function FilterPanel({ filters, setFilters, toggleArrayFilter, onClear }: Filter
             <Chip
               key={level}
               label={level}
-              active={filters.experienceLevel.includes(level)}
+              active={filters.experienceLevel?.includes(level)}
               onClick={() => toggleArrayFilter("experienceLevel", level)}
             />
           ))}
         </FilterGroup>
       </div>
 
-      <div className="mt-5">
-        <span className="mb-2 block text-xs font-medium text-[#8A9199]">
-          Minimum salary — {filters.minSalary > 0 ? `$${filters.minSalary}/mo` : "Any"}
+      <div className="mt-5 border-t pt-4" style={{ borderColor: C.border }}>
+        <span className="mb-2 block text-xs font-semibold tracking-wider uppercase" style={{ color: C.textDim }}>
+          Minimum Salary — {filters.minSalary > 0 ? `$${filters.minSalary}/mo` : "Any"}
         </span>
         <input
           type="range"
           min={0}
           max={6000}
           step={100}
-          value={filters.minSalary}
+          value={filters.minSalary || 0}
           onChange={(e) => setFilters((f) => ({ ...f, minSalary: Number(e.target.value) }))}
-          className="w-full accent-[#0CF2F2]"
+          className="w-full accent-teal-400 cursor-pointer"
         />
       </div>
 
       <button
         onClick={onClear}
-        className="mt-4 text-xs font-medium text-[#8A9199] hover:text-white"
+        className="mt-4 text-xs font-semibold tracking-wide hover:underline"
+        style={{ color: C.teal }}
       >
         Clear all filters
       </button>
@@ -264,7 +356,9 @@ function FilterPanel({ filters, setFilters, toggleArrayFilter, onClear }: Filter
 function FilterGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium text-[#8A9199]">{label}</span>
+      <span className="mb-2 block text-xs font-semibold tracking-wider uppercase" style={{ color: C.textDim }}>
+        {label}
+      </span>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
@@ -275,11 +369,12 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-        active
-          ? "border-[#0CF2F2]/40 bg-[#0CF2F2]/10 text-[#0CF2F2]"
-          : "border-white/10 text-[#8A9199] hover:bg-white/5"
-      }`}
+      className="rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all"
+      style={{
+        background: active ? `${C.teal}15` : C.panelAlt,
+        borderColor: active ? `${C.teal}40` : C.border,
+        color: active ? C.teal : C.textDim,
+      }}
     >
       {label}
     </button>
@@ -288,16 +383,25 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
 
 function EmptyResults({ onClear }: { onClear: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 py-16 text-center">
-      <div className="rounded-full bg-white/5 p-3 text-[#8A9199]">
-        <Briefcase size={20} />
+    <div
+      className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center"
+      style={{ borderColor: C.border, background: C.panel }}
+    >
+      <div className="rounded-xl p-3 border" style={{ background: C.panelAlt, borderColor: C.border }}>
+        <Briefcase size={22} style={{ color: C.teal }} />
       </div>
-      <h3 className="mt-3 text-sm font-semibold">No roles match your filters</h3>
-      <p className="mt-1 max-w-xs text-xs text-[#8A9199]">
-        Try widening your search or clearing a few filters.
+      <h3 className="mt-4 text-sm font-bold" style={{ color: C.text }}>
+        No roles match your search
+      </h3>
+      <p className="mt-1 max-w-xs text-xs" style={{ color: C.textDim }}>
+        Try clearing some applied filters or searching with alternative keywords.
       </p>
-      <button onClick={onClear} className="mt-3 text-xs font-medium text-[#0CF2F2] hover:underline">
-        Clear all filters
+      <button
+        onClick={onClear}
+        className="mt-4 text-xs font-semibold tracking-wider uppercase hover:underline"
+        style={{ color: C.teal }}
+      >
+        Reset filters
       </button>
     </div>
   );
@@ -313,54 +417,89 @@ function JobDetail({
   onToggleSave: (job: Job) => void;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#20272D] p-6">
+    <div
+      className="rounded-2xl border p-6 shadow-2xl space-y-5"
+      style={{ background: C.panel, borderColor: C.border }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">{job.title}</h2>
-          <p className="mt-1 text-sm text-[#8A9199]">
+          <h2 className="text-xl font-bold tracking-tight" style={{ color: C.text }}>
+            {job.title}
+          </h2>
+          <p className="mt-1 text-xs" style={{ color: C.textDim }}>
             {job.department} · {job.location} · {job.workMode}
           </p>
         </div>
         <button
           onClick={() => onToggleSave(job)}
-          className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium ${
-            saved
-              ? "border-[#D9B855]/40 bg-[#D9B855]/10 text-[#D9B855]"
-              : "border-white/10 text-[#8A9199] hover:bg-white/5"
-          }`}
+          className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all shrink-0"
+          style={{
+            background: saved ? "rgba(217, 184, 85, 0.1)" : C.panelAlt,
+            borderColor: saved ? "rgba(217, 184, 85, 0.3)" : C.border,
+            color: saved ? "#D9B855" : C.textDim,
+          }}
         >
+          <Bookmark size={14} />
           {saved ? "Saved" : "Save role"}
         </button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {job.skills.map((skill) => (
+      <div className="flex flex-wrap gap-1.5">
+        {(job.skills || []).map((skill) => (
           <span
             key={skill}
-            className="rounded-md bg-[#27668C]/25 px-2 py-1 text-xs font-medium text-[#6FB4DD]"
+            className="rounded-lg px-2.5 py-1 text-xs font-semibold border"
+            style={{
+              background: `${C.teal}10`,
+              borderColor: `${C.teal}30`,
+              color: C.teal,
+            }}
           >
             {skill}
           </span>
         ))}
       </div>
 
-      <div className="mt-5 text-lg font-semibold text-[#2CBFBF]">
-        {job.salary.currency} {job.salary.min.toLocaleString()}–{job.salary.max.toLocaleString()}
-        <span className="text-sm font-normal text-[#8A9199]"> /mo</span>
+      {/* Safe Salary Rendering */}
+      <div className="text-xl font-extrabold tracking-tight" style={{ color: C.teal }}>
+        {job.salary ? (
+          <>
+            {job.salary.currency || "$"} {job.salary.min?.toLocaleString() || 0} – {job.salary.max?.toLocaleString() || 0}
+            <span className="text-xs font-normal" style={{ color: C.textDim }}> / mo</span>
+          </>
+        ) : (
+          <span className="text-sm font-normal text-gray-400">Salary Undisclosed</span>
+        )}
       </div>
 
-      <section className="mt-6">
-        <h3 className="text-sm font-semibold text-white">About the role</h3>
-        <p className="mt-2 text-sm leading-relaxed text-[#B4BAC1]">{job.description}</p>
-      </section>
+      <div className="border-t pt-4 space-y-4" style={{ borderColor: C.border }}>
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: C.textDim }}>
+            About the role
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed" style={{ color: C.text }}>
+            {job.description}
+          </p>
+        </section>
 
-      <section className="mt-5">
-        <h3 className="text-sm font-semibold text-white">Requirements</h3>
-        <p className="mt-2 text-sm leading-relaxed text-[#B4BAC1]">{job.requirements}</p>
-      </section>
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: C.textDim }}>
+            Requirements
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed" style={{ color: C.text }}>
+            {job.requirements}
+          </p>
+        </section>
+      </div>
 
-      <button className="mt-6 w-full rounded-lg bg-[#0CF2F2] py-3 text-sm font-semibold text-[#0B1416] hover:opacity-90">
-        Apply now
+      <button
+        className="w-full rounded-xl py-3 text-xs font-extrabold uppercase tracking-wider transition-all shadow-md hover:scale-[1.01]"
+        style={{
+          background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`,
+          color: "#08101b",
+        }}
+      >
+        Apply for Position
       </button>
     </div>
   );
