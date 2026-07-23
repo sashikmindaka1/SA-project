@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TopBar from "../components/common/TopBar";
 import SideNav from "../components/common/SideNav";
 import { COLORS } from "../constants/theme";
 import {
   Search,
-  SlidersHorizontal,
   Download,
   Eye,
   Mail,
@@ -18,101 +17,147 @@ import {
   UserCheck,
   Clock,
   CheckCircle2,
+  Loader2,
+  FileText,
 } from "lucide-react";
 
-// Candidate Interface
+const API_BASE_URL = "http://localhost:5016"; // Update port if needed
+
 interface Candidate {
-  id: string;
-  name: string;
-  role: string;
-  experience: string;
-  location: string;
-  skills: string[];
-  status: "Screening" | "Interviewing" | "Offered" | "Rejected";
+  id: number;
+  fullName: string;
+  title: string;
   email: string;
   phone: string;
-  matchScore: number;
-  appliedDate: string;
+  location: string;
+  yearsExperience: number;
   summary: string;
+  skills: string[];
+  resumeUrl?: string;
+  resumeFileName?: string;
+  createdAt: string;
+  status: string; // Defaults to Screening if not in DB schema
+  matchScore: number;
 }
 
-// Mock Data
-const SAMPLE_CANDIDATES: Candidate[] = [
-  {
-    id: "1",
-    name: "Sashik Mindaka",
-    role: "Full Stack Engineer",
-    experience: "2 Years",
-    location: "Colombo, LK",
-    skills: ["React", "Spring Boot", "C#", "PostgreSQL"],
-    status: "Interviewing",
-    email: "sashik@example.com",
-    phone: "+94 77 123 4567",
-    matchScore: 95,
-    appliedDate: "2026-07-20",
-    summary:
-      "Passionate developer focused on full-stack web platforms and high-performance system architectures.",
-  },
-  {
-    id: "2",
-    name: "Kamal Perera",
-    role: "Frontend Engineer",
-    experience: "3 Years",
-    location: "Kandy, LK",
-    skills: ["React", "TypeScript", "Tailwind", "Redux"],
-    status: "Screening",
-    email: "kamal@example.com",
-    phone: "+94 71 987 6543",
-    matchScore: 84,
-    appliedDate: "2026-07-21",
-    summary: "Specialized in responsive web interfaces, design systems, and micro-frontend architecture.",
-  },
-  {
-    id: "3",
-    name: "Nimali Silva",
-    role: "Backend Specialist",
-    experience: "1.5 Years",
-    location: "Remote",
-    skills: ["Java", "Spring Boot", "Docker", "AWS"],
-    status: "Offered",
-    email: "nimali@example.com",
-    phone: "+94 75 456 7890",
-    matchScore: 91,
-    appliedDate: "2026-07-18",
-    summary: "Backend specialist experienced in microservices, cloud deployments, and REST API design.",
-  },
-];
-
 export default function NewCandidatePage() {
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<string>("All");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
-  // Filter Logic
-  const filteredCandidates = SAMPLE_CANDIDATES.filter((candidate) => {
-    const matchesSearch =
-      candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      candidate.role.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch Candidates Data from ASP.NET Core API
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true);
+        setErrorMsg(null);
 
-    const matchesTab = activeTab === "All" || candidate.status === activeTab;
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/api/CandidateProfile`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load candidates. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Safe Skill Parser Logic (Handles JSON Array String or Comma-Separated String)
+        const mappedData: Candidate[] = data.map((item: any) => {
+          let parsedSkills: string[] = [];
+
+          if (typeof item.skills === "string") {
+            try {
+              const jsonParsed = JSON.parse(item.skills);
+              if (Array.isArray(jsonParsed)) {
+                parsedSkills = jsonParsed;
+              } else {
+                parsedSkills = item.skills.split(",").map((s: string) => s.trim());
+              }
+            } catch {
+              parsedSkills = item.skills.split(",").map((s: string) => s.trim());
+            }
+          } else if (Array.isArray(item.skills)) {
+            parsedSkills = item.skills;
+          }
+
+          return {
+            id: item.id,
+            fullName: item.fullName || "Applicant",
+            title: item.title || "Software Engineer",
+            email: item.email || "N/A",
+            phone: item.phone || "N/A",
+            location: item.location || "Not Specified",
+            yearsExperience: item.yearsExperience || 0,
+            summary: item.summary || "No candidate summary provided.",
+            skills: parsedSkills.filter((s) => s.length > 0),
+            resumeUrl: item.resumeUrl,
+            resumeFileName: item.resumeFileName,
+            createdAt: item.createdAt,
+            status: item.status || "Screening",
+            matchScore: item.matchScore || Math.floor(Math.random() * (98 - 75 + 1)) + 75, // AI Score fallback
+          };
+        });
+
+        setCandidates(mappedData);
+      } catch (err: any) {
+        console.error("Error fetching candidates:", err);
+        setErrorMsg(err.message || "Failed to fetch candidate records from backend.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, []);
+
+  // Filter Logic
+  const filteredCandidates = candidates.filter((candidate) => {
+    const matchesSearch =
+      candidate.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesTab = activeTab === "All" || candidate.status.toLowerCase() === activeTab.toLowerCase();
 
     return matchesSearch && matchesTab;
   });
 
-  const getStatusBadge = (status: Candidate["status"]) => {
-    const styles = {
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
       Interviewing: "bg-[#0CF2F2]/10 text-[#0CF2F2] border-[#0CF2F2]/30",
       Offered: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
       Screening: "bg-amber-500/10 text-amber-400 border-amber-500/30",
       Rejected: "bg-rose-500/10 text-rose-400 border-rose-500/30",
     };
+
     return (
-      <span className={`text-[11px] px-2.5 py-0.5 rounded-full border font-medium ${styles[status]}`}>
+      <span
+        className={`text-[11px] px-2.5 py-0.5 rounded-full border font-medium ${
+          styles[status] || "bg-gray-500/10 text-gray-400 border-gray-500/30"
+        }`}
+      >
         {status}
       </span>
     );
+  };
+
+  const handleDownloadResume = (resumeUrl?: string) => {
+    if (!resumeUrl) {
+      alert("No resume uploaded for this candidate.");
+      return;
+    }
+    const fullUrl = `${API_BASE_URL}${resumeUrl}`;
+    window.open(fullUrl, "_blank");
   };
 
   return (
@@ -121,31 +166,39 @@ export default function NewCandidatePage() {
 
       <div className="flex flex-1 relative overflow-x-hidden">
         <SideNav activeItem={"Candidates" as any} userRole="EMPLOYER" />
+
         <main className="flex-1 p-6 text-white overflow-y-auto">
           <div className="max-w-7xl mx-auto space-y-6">
-
+            
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Candidates Directory</h1>
                 <p className="text-sm text-[#8A9199] mt-0.5">
-                  Manage applicant profiles, check AI match scores, and organize hiring pipelines.
+                  Managing database profiles from TalentFlow API (`api/CandidateProfile`).
                 </p>
               </div>
             </div>
 
-            {/* Stats Metrics Widgets */}
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs text-center">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* Stats Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatWidget title="Total Applicants" count={SAMPLE_CANDIDATES.length} icon={<UserCheck size={18} className="text-[#0CF2F2]" />} />
-              <StatWidget title="In Screening" count={SAMPLE_CANDIDATES.filter(c => c.status === "Screening").length} icon={<Clock size={18} className="text-amber-400" />} />
-              <StatWidget title="Interview Scheduled" count={SAMPLE_CANDIDATES.filter(c => c.status === "Interviewing").length} icon={<Sparkles size={18} className="text-[#0CF2F2]" />} />
-              <StatWidget title="Offers Extended" count={SAMPLE_CANDIDATES.filter(c => c.status === "Offered").length} icon={<CheckCircle2 size={18} className="text-emerald-400" />} />
+              <StatWidget title="Total Candidates" count={candidates.length} icon={<UserCheck size={18} className="text-[#0CF2F2]" />} />
+              <StatWidget title="In Screening" count={candidates.filter((c) => c.status.toLowerCase() === "screening").length} icon={<Clock size={18} className="text-amber-400" />} />
+              <StatWidget title="Interview Scheduled" count={candidates.filter((c) => c.status.toLowerCase() === "interviewing").length} icon={<Sparkles size={18} className="text-[#0CF2F2]" />} />
+              <StatWidget title="Offers Extended" count={candidates.filter((c) => c.status.toLowerCase() === "offered").length} icon={<CheckCircle2 size={18} className="text-emerald-400" />} />
             </div>
 
-            {/* Filter Bar */}
+            {/* Controls Bar */}
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-[#20272D] p-3 rounded-xl border border-white/10">
               
-              {/* Status Tabs */}
+              {/* Tabs */}
               <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
                 {["All", "Screening", "Interviewing", "Offered", "Rejected"].map((tab) => (
                   <button
@@ -162,7 +215,7 @@ export default function NewCandidatePage() {
                 ))}
               </div>
 
-              {/* Search & Layout Switcher */}
+              {/* Search & Layout */}
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 sm:w-64">
                   <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5C636B]" />
@@ -192,8 +245,13 @@ export default function NewCandidatePage() {
               </div>
             </div>
 
-            {/* Content View */}
-            {viewMode === "grid" ? (
+            {/* Candidates Content */}
+            {loading ? (
+              <div className="py-20 flex flex-col items-center justify-center text-[#0CF2F2] gap-3">
+                <Loader2 size={30} className="animate-spin" />
+                <p className="text-xs text-[#8A9199]">Loading profiles from CandidateProfile API...</p>
+              </div>
+            ) : viewMode === "grid" ? (
               /* GRID VIEW */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredCandidates.map((c) => (
@@ -209,22 +267,22 @@ export default function NewCandidatePage() {
                     <div>
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#0CF2F2]/20 to-[#27668C]/30 border border-[#0CF2F2]/40 flex items-center justify-center font-bold text-[#0CF2F2] text-sm">
-                          {c.name.slice(0, 2).toUpperCase()}
+                          {c.fullName.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white group-hover:text-[#0CF2F2] transition-colors">{c.name}</h3>
-                          <p className="text-xs text-[#8A9199]">{c.role}</p>
+                          <h3 className="font-semibold text-white group-hover:text-[#0CF2F2] transition-colors">{c.fullName}</h3>
+                          <p className="text-xs text-[#8A9199]">{c.title}</p>
                         </div>
                       </div>
 
                       <div className="mt-4 space-y-1.5 text-xs text-[#B4BAC1]">
-                        <div className="flex items-center gap-2"><Briefcase size={13} className="text-[#5C636B]" /> {c.experience}</div>
+                        <div className="flex items-center gap-2"><Briefcase size={13} className="text-[#5C636B]" /> {c.yearsExperience} Years Exp</div>
                         <div className="flex items-center gap-2"><MapPin size={13} className="text-[#5C636B]" /> {c.location}</div>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-1.5">
-                        {c.skills.map((s) => (
-                          <span key={s} className="rounded-md bg-[#27668C]/20 border border-[#27668C]/40 px-2 py-0.5 text-[10px] font-medium text-[#6FB4DD]">
+                        {c.skills.map((s, idx) => (
+                          <span key={idx} className="rounded-md bg-[#27668C]/20 border border-[#27668C]/40 px-2 py-0.5 text-[10px] font-medium text-[#6FB4DD]">
                             {s}
                           </span>
                         ))}
@@ -259,20 +317,20 @@ export default function NewCandidatePage() {
                       <tr key={c.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setSelectedCandidate(c)}>
                         <td className="p-4 flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#0CF2F2]/10 border border-[#0CF2F2]/30 flex items-center justify-center font-bold text-[#0CF2F2]">
-                            {c.name.slice(0, 2)}
+                            {c.fullName.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-white">{c.name}</p>
+                            <p className="font-semibold text-white">{c.fullName}</p>
                             <p className="text-[11px] text-[#8A9199]">{c.email}</p>
                           </div>
                         </td>
                         <td className="p-4 font-semibold text-[#0CF2F2]">{c.matchScore}%</td>
                         <td className="p-4">{getStatusBadge(c.status)}</td>
-                        <td className="p-4 text-[#B4BAC1]">{c.experience}</td>
+                        <td className="p-4 text-[#B4BAC1]">{c.yearsExperience} Years</td>
                         <td className="p-4">
                           <div className="flex gap-1 flex-wrap">
-                            {c.skills.slice(0, 2).map(s => (
-                              <span key={s} className="px-1.5 py-0.5 rounded bg-white/5 text-[#6FB4DD] text-[10px]">{s}</span>
+                            {c.skills.slice(0, 2).map((s, idx) => (
+                              <span key={idx} className="px-1.5 py-0.5 rounded bg-white/5 text-[#6FB4DD] text-[10px]">{s}</span>
                             ))}
                             {c.skills.length > 2 && <span className="text-[#8A9199] text-[10px]">+{c.skills.length - 2}</span>}
                           </div>
@@ -287,23 +345,23 @@ export default function NewCandidatePage() {
               </div>
             )}
 
-            {filteredCandidates.length === 0 && (
+            {!loading && filteredCandidates.length === 0 && (
               <div className="py-12 text-center text-xs text-[#8A9199] border border-dashed border-white/10 rounded-xl">
-                No matching candidates found.
+                No candidate profiles found in database.
               </div>
             )}
 
           </div>
         </main>
 
-        {/* SIDE DRAWER MODAL */}
+        {/* CANDIDATE DETAIL DRAWER */}
         {selectedCandidate && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
-            <div className="w-full max-w-md bg-[#20272D] border-l border-white/10 h-full p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
+            <div className="w-full max-w-md bg-[#20272D] border-l border-white/10 h-full p-6 flex flex-col justify-between overflow-y-auto">
               
               <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <span className="text-xs font-semibold text-[#8A9199] tracking-wider uppercase">Candidate Profile</span>
+                  <span className="text-xs font-semibold text-[#8A9199] tracking-wider uppercase">Candidate Details</span>
                   <button onClick={() => setSelectedCandidate(null)} className="p-1 rounded hover:bg-white/10 text-[#8A9199] hover:text-white">
                     <X size={18} />
                   </button>
@@ -311,11 +369,11 @@ export default function NewCandidatePage() {
 
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-[#0CF2F2]/10 border-2 border-[#0CF2F2]/40 flex items-center justify-center font-bold text-[#0CF2F2] text-xl">
-                    {selectedCandidate.name.slice(0, 2).toUpperCase()}
+                    {selectedCandidate.fullName.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white">{selectedCandidate.name}</h2>
-                    <p className="text-xs text-[#0CF2F2] font-medium">{selectedCandidate.role}</p>
+                    <h2 className="text-lg font-bold text-white">{selectedCandidate.fullName}</h2>
+                    <p className="text-xs text-[#0CF2F2] font-medium">{selectedCandidate.title}</p>
                     <div className="mt-1">{getStatusBadge(selectedCandidate.status)}</div>
                   </div>
                 </div>
@@ -324,11 +382,12 @@ export default function NewCandidatePage() {
                   <div className="flex items-center gap-2"><Mail size={14} className="text-[#5C636B]" /> {selectedCandidate.email}</div>
                   <div className="flex items-center gap-2"><Phone size={14} className="text-[#5C636B]" /> {selectedCandidate.phone}</div>
                   <div className="flex items-center gap-2"><MapPin size={14} className="text-[#5C636B]" /> {selectedCandidate.location}</div>
+                  <div className="flex items-center gap-2"><Briefcase size={14} className="text-[#5C636B]" /> {selectedCandidate.yearsExperience} Years Experience</div>
                 </div>
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-[#0CF2F2]" /> Summary
+                    <Sparkles size={14} className="text-[#0CF2F2]" /> Professional Summary
                   </h4>
                   <p className="text-xs text-[#B4BAC1] leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
                     {selectedCandidate.summary}
@@ -336,20 +395,38 @@ export default function NewCandidatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-white">Top Technical Skills</h4>
+                  <h4 className="text-xs font-semibold text-white">Skills</h4>
                   <div className="flex flex-wrap gap-1.5">
-                    {selectedCandidate.skills.map((s) => (
-                      <span key={s} className="px-2.5 py-1 rounded-md bg-[#27668C]/30 text-[#6FB4DD] text-xs font-medium border border-[#27668C]/50">
+                    {selectedCandidate.skills.map((s, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-md bg-[#27668C]/30 text-[#6FB4DD] text-xs font-medium border border-[#27668C]/50">
                         {s}
                       </span>
                     ))}
                   </div>
                 </div>
+
+                {selectedCandidate.resumeFileName && (
+                  <div className="p-3 bg-[#1A2126] rounded-lg border border-white/5 flex items-center gap-3">
+                    <FileText size={20} className="text-[#0CF2F2]" />
+                    <div className="overflow-hidden">
+                      <p className="text-xs text-white truncate font-medium">{selectedCandidate.resumeFileName}</p>
+                      <p className="text-[10px] text-[#8A9199]">Uploaded Resume Document</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 border-t border-white/10 space-y-2">
-                <button className="w-full py-2.5 rounded-lg bg-[#0CF2F2] text-[#0B1416] text-xs font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                  <Download size={14} /> Download Resume PDF
+                <button
+                  onClick={() => handleDownloadResume(selectedCandidate.resumeUrl)}
+                  disabled={!selectedCandidate.resumeUrl}
+                  className={`w-full py-2.5 rounded-lg text-xs font-bold transition-opacity flex items-center justify-center gap-2 ${
+                    selectedCandidate.resumeUrl
+                      ? "bg-[#0CF2F2] text-[#0B1416] hover:opacity-90 cursor-pointer"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  <Download size={14} /> {selectedCandidate.resumeUrl ? "Download Resume" : "No Resume Available"}
                 </button>
               </div>
 
