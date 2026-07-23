@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 import UpcomingInterviews from '../components/hiring-manager/UpcomingInterviews';
 import EvaluationForm from '../components/hiring-manager/EvaluationForm';
@@ -23,6 +24,9 @@ const C = {
   red: "#E0665A",
 } as const;
 
+const API_BASE_URL = "http://localhost:5016";
+const SAVED_PROFILE_ID_KEY = "candidateProfileId";
+
 export default function HiringManagerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [stats, setStats] = useState({
@@ -32,8 +36,106 @@ export default function HiringManagerDashboard() {
     conversionRate: 68
   });
 
+  // Dynamic Profile State (Includes photoUrl now)
+  const [userProfile, setUserProfile] = useState({
+    fullName: "Manager User",
+    title: "HIRING MANAGER",
+    photoUrl: null as string | null,
+  });
+
+  // Function to load profile dynamically
+  const loadUserProfile = async () => {
+    // 1. Try saved candidateProfileId first (same as settings page)
+    const savedId = localStorage.getItem(SAVED_PROFILE_ID_KEY);
+    if (savedId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/CandidateProfile/${savedId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile({
+            fullName: data.fullName || "Manager User",
+            title: (data.title || "HIRING MANAGER").toUpperCase(),
+            photoUrl: data.photoUrl ? `${API_BASE_URL}${data.photoUrl}` : null,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load profile by saved ID:", err);
+      }
+    }
+
+    // 2. Fallback to reading JSON keys in LocalStorage
+    const possibleKeys = ["hiring_manager_profile", "userProfile", "user", "manager_profile", "candidate_profile_draft"];
+    for (const key of possibleKeys) {
+      const savedData = localStorage.getItem(key);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          const foundName = parsed.fullName || parsed.name || parsed.userName;
+          const foundTitle = parsed.title || parsed.jobTitle || parsed.role;
+          const foundPhoto = parsed.photoUrl || parsed.avatar;
+
+          if (foundName) {
+            setUserProfile({
+              fullName: foundName,
+              title: (foundTitle || "HIRING MANAGER").toUpperCase(),
+              photoUrl: foundPhoto ? (foundPhoto.startsWith("http") ? foundPhoto : `${API_BASE_URL}${foundPhoto}`) : null,
+            });
+            return;
+          }
+        } catch (e) {
+          console.error(`Error reading key ${key} from LocalStorage`, e);
+        }
+      }
+    }
+
+    // 3. Fallback API Fetch
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_BASE_URL}/api/HiringManager/profile`, {
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+
+      if (response.data) {
+        setUserProfile({
+          fullName: response.data.fullName || response.data.name || "Manager User",
+          title: (response.data.title || response.data.role || "HIRING MANAGER").toUpperCase(),
+          photoUrl: response.data.photoUrl ? `${API_BASE_URL}${response.data.photoUrl}` : null,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load hiring manager profile from API", err);
+    }
+  };
+
   useEffect(() => {
-    fetch('http://localhost:5016/api/Interview/stats') 
+    loadUserProfile();
+
+    // Listen to local storage changes from other tabs or settings updates
+    const handleStorageChange = () => {
+      loadUserProfile();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("profileUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("profileUpdated", handleStorageChange);
+    };
+  }, []);
+
+  const getInitials = (name: string) => {
+    if (!name) return "HM";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/Interview/stats`) 
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch dashboard stats');
         return res.json();
@@ -48,15 +150,15 @@ export default function HiringManagerDashboard() {
       {/* Top Application Nav Bar */}
       <nav className="w-full px-10 py-5 border-b sticky top-0 z-20 backdrop-blur-md shadow-lg flex justify-between items-center" style={{ borderColor: C.border, background: `${C.bg}EE` }}>
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-base shadow-lg" style={{ background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`, color: "#08101b" }}>
+          <div className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-base shadow-lg shrink-0" style={{ background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`, color: "#08101b" }}>
             TF
           </div>
-          <span className="font-extrabold tracking-tight text-lg" style={{ color: C.text }}>
+          <span className="font-extrabold tracking-tight text-lg hidden sm:block" style={{ color: C.text }}>
             Talent<span style={{ color: C.teal }}>Flow</span> AI
           </span>
         </div>
         
-        <div className="flex-1 max-w-xl mx-8 relative">
+        <div className="flex-1 max-w-xl mx-8 relative hidden md:block">
           <input 
             type="text" 
             placeholder="Search candidates, interviews, or evaluations..." 
@@ -68,17 +170,22 @@ export default function HiringManagerDashboard() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative p-2.5 rounded-xl shadow-inner shrink-0 cursor-pointer" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+          <div className="relative p-2.5 rounded-xl shadow-inner shrink-0 cursor-pointer transition-all hover:bg-white/5" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
             <Bell size={18} style={{ color: C.textDim }} />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full" style={{ background: C.teal }}></span>
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full shadow-[0_0_8px_#22d9d9]" style={{ background: C.teal }}></span>
           </div>
+
           <div className="flex items-center gap-3 pl-3 border-l shrink-0" style={{ borderColor: C.border }}>
-            <div className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md" style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}>
-              NL
+            <div className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}>
+              {userProfile.photoUrl ? (
+                <img src={userProfile.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                getInitials(userProfile.fullName)
+              )}
             </div>
             <div className="text-right hidden sm:block leading-tight">
-              <div className="text-xs font-bold" style={{ color: C.text }}>Nimsara Lakmal</div>
-              <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>HIRING MANAGER</div>
+              <div className="text-xs font-bold" style={{ color: C.text }}>{userProfile.fullName}</div>
+              <div className="text-[10px] font-semibold tracking-wider mt-0.5 uppercase" style={{ color: C.teal }}>{userProfile.title}</div>
             </div>
           </div>
         </div>
@@ -92,7 +199,7 @@ export default function HiringManagerDashboard() {
         <main className="p-10 flex-1 overflow-y-auto">
           
           {/* Header Section */}
-          <div className="flex justify-between items-end pb-6 mb-6">
+          <div className="flex justify-between items-end pb-6 mb-6 flex-wrap gap-4">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: C.text }}>Interview Management</h1>
               <p className="mt-1.5 text-sm" style={{ color: C.textDim }}>Schedule, evaluate, and orchestrate candidate sequences.</p>
@@ -108,7 +215,7 @@ export default function HiringManagerDashboard() {
           </div>
 
           {/* KPI Metrics Ribbon */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
             {[
               { label: 'Pending Evaluations', value: stats.pendingEvaluations, icon: Clock, color: C.gold },
               { label: 'Interviews Today', value: stats.interviewsToday, icon: CalendarDays, color: C.teal },
@@ -132,10 +239,10 @@ export default function HiringManagerDashboard() {
 
           {/* Grid Layout (Child Components) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div className="col-span-2">
+             <div className="col-span-1 lg:col-span-2">
                 <UpcomingInterviews />
              </div>
-             <div>
+             <div className="col-span-1">
                 <EvaluationForm />
              </div>
           </div>

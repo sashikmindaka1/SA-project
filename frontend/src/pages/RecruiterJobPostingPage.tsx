@@ -1,6 +1,7 @@
 import {
   useEffect,
   useState,
+  useMemo,
   type Dispatch,
   type SetStateAction,
   type ReactNode,
@@ -70,6 +71,7 @@ const STATUS_STYLES: Record<JobStatus, { bg: string; color: string; border: stri
 export default function RecruiterJobPostingPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<JobFormValues>(EMPTY_FORM);
@@ -82,6 +84,18 @@ export default function RecruiterJobPostingPage() {
       .catch((err) => console.error("Failed to load jobs:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Live Filtering Logic
+  const filteredJobs = useMemo(() => {
+    if (!searchQuery.trim()) return jobs;
+    const q = searchQuery.toLowerCase();
+    return jobs.filter(
+      (job) =>
+        job.title.toLowerCase().includes(q) ||
+        job.department.toLowerCase().includes(q) ||
+        job.location.toLowerCase().includes(q)
+    );
+  }, [jobs, searchQuery]);
 
   function openCreatePanel() {
     setEditingId(null);
@@ -137,6 +151,8 @@ export default function RecruiterJobPostingPage() {
   }
 
   async function handleDelete(id: number) {
+    if (!window.confirm("Are you sure you want to delete this job posting?")) return;
+
     const previousJobs = [...jobs];
     setJobs((prev) => prev.filter((j) => j.id !== id));
 
@@ -150,7 +166,7 @@ export default function RecruiterJobPostingPage() {
 
   return (
     <div className="w-full min-h-screen flex flex-col font-sans" style={{ background: C.bg, color: C.text }}>
-      {/* Top Application Nav Bar */}
+      {/* Top Navigation Bar */}
       <nav
         className="w-full px-10 py-5 border-b sticky top-0 z-20 backdrop-blur-md shadow-lg flex justify-between items-center"
         style={{ borderColor: C.border, background: `${C.bg}EE` }}
@@ -170,6 +186,8 @@ export default function RecruiterJobPostingPage() {
         <div className="flex-1 max-w-xl mx-8 relative hidden md:block">
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search job postings, departments, or keywords..."
             className="w-full border rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none transition-all shadow-inner"
             style={{ background: C.panelAlt, borderColor: C.border, color: C.text }}
@@ -206,13 +224,12 @@ export default function RecruiterJobPostingPage() {
         </div>
       </nav>
 
-      {/* Main Layout Area */}
+      {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
         <SideNav />
 
         <main className="p-8 md:p-10 flex-1 overflow-y-auto">
           <div className="max-w-6xl mx-auto space-y-6">
-            {/* Header */}
             <header className="flex items-center justify-between pb-2">
               <div>
                 <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3" style={{ color: C.text }}>
@@ -235,7 +252,6 @@ export default function RecruiterJobPostingPage() {
               </button>
             </header>
 
-            {/* Table or Empty Content */}
             <div
               className="rounded-2xl border p-6 shadow-2xl relative"
               style={{ background: C.panel, borderColor: C.border }}
@@ -247,8 +263,8 @@ export default function RecruiterJobPostingPage() {
                     Fetching job postings...
                   </span>
                 </div>
-              ) : jobs.length === 0 ? (
-                <EmptyState onCreate={openCreatePanel} />
+              ) : filteredJobs.length === 0 ? (
+                <EmptyState onCreate={openCreatePanel} isSearching={Boolean(searchQuery)} />
               ) : (
                 <div className="overflow-hidden rounded-xl border" style={{ borderColor: C.border }}>
                   <table className="w-full text-left text-sm">
@@ -262,8 +278,8 @@ export default function RecruiterJobPostingPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: C.border }}>
-                      {jobs.map((job) => {
-                        const style = STATUS_STYLES[job.status];
+                      {filteredJobs.map((job) => {
+                        const style = STATUS_STYLES[job.status] || STATUS_STYLES.Draft;
                         return (
                           <tr key={job.id} className="transition-colors hover:bg-white/[0.02]">
                             <td className="px-5 py-4">
@@ -288,7 +304,7 @@ export default function RecruiterJobPostingPage() {
                             </td>
                             <td className="px-5 py-4">
                               <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: C.textDim }}>
-                                <Users size={14} style={{ color: C.teal }} /> {job.applicantCount}
+                                <Users size={14} style={{ color: C.teal }} /> {job.applicantCount ?? 0}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-xs font-medium" style={{ color: C.textDim }}>
@@ -349,7 +365,7 @@ export default function RecruiterJobPostingPage() {
   );
 }
 
-function EmptyState({ onCreate }: { onCreate: () => void }) {
+function EmptyState({ onCreate, isSearching }: { onCreate: () => void; isSearching: boolean }) {
   return (
     <div
       className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center"
@@ -359,21 +375,25 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         <Briefcase size={28} style={{ color: C.teal }} />
       </div>
       <h3 className="mt-4 text-base font-bold" style={{ color: C.text }}>
-        No roles posted yet
+        {isSearching ? "No matching roles found" : "No roles posted yet"}
       </h3>
       <p className="mt-1 max-w-xs text-xs" style={{ color: C.textDim }}>
-        Post your first job role to initiate AI resume matching and receive candidates.
+        {isSearching
+          ? "Try adjusting your search criteria or keywords."
+          : "Post your first job role to initiate AI resume matching and receive candidates."}
       </p>
-      <button
-        onClick={onCreate}
-        className="mt-6 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-md"
-        style={{
-          background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`,
-          color: "#08101b",
-        }}
-      >
-        <Plus size={16} /> Post a job
-      </button>
+      {!isSearching && (
+        <button
+          onClick={onCreate}
+          className="mt-6 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-md"
+          style={{
+            background: `linear-gradient(135deg, ${C.teal}, #0f5f5f)`,
+            color: "#08101b",
+          }}
+        >
+          <Plus size={16} /> Post a job
+        </button>
+      )}
     </div>
   );
 }
@@ -516,9 +536,12 @@ function JobFormPanel({
               <input
                 type="number"
                 className="tf-input"
-                value={form.salary.min || ""}
+                value={form.salary?.min ?? 0}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, salary: { ...f.salary, min: Number(e.target.value) } }))
+                  setForm((f) => ({
+                    ...f,
+                    salary: { ...f.salary, min: Number(e.target.value) || 0 },
+                  }))
                 }
               />
             </Field>
@@ -526,9 +549,12 @@ function JobFormPanel({
               <input
                 type="number"
                 className="tf-input"
-                value={form.salary.max || ""}
+                value={form.salary?.max ?? 0}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, salary: { ...f.salary, max: Number(e.target.value) } }))
+                  setForm((f) => ({
+                    ...f,
+                    salary: { ...f.salary, max: Number(e.target.value) || 0 },
+                  }))
                 }
               />
             </Field>
@@ -601,7 +627,7 @@ function JobFormPanel({
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  closingDate: e.target.value ? new Date(e.target.value).toISOString() : null,
+                  closingDate: e.target.value ? `${e.target.value}T00:00:00.000Z` : null,
                 }))
               }
             />
@@ -634,27 +660,6 @@ function JobFormPanel({
           </button>
         </div>
       </div>
-
-      <style>{`
-        .tf-input {
-          width: 100%;
-          background: ${C.panelAlt};
-          border: 1px solid ${C.border};
-          border-radius: 0.75rem;
-          padding: 0.65rem 0.85rem;
-          font-size: 0.8125rem;
-          color: ${C.text};
-          outline: none;
-          transition: all 0.2s ease;
-        }
-        .tf-input:focus {
-          border-color: ${C.teal};
-          box-shadow: 0 0 0 1px ${C.teal}40;
-        }
-        .tf-input::placeholder {
-          color: ${C.textDim};
-        }
-      `}</style>
     </div>
   );
 }

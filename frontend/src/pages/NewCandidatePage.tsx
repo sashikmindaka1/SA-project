@@ -68,7 +68,68 @@ export default function NewCandidatePage() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
-  // Fetch Candidates Data from ASP.NET Core API
+  // Profile Header State for Navbar
+  const [userProfile, setUserProfile] = useState({
+    fullName: "Recruiter Portal",
+    title: "RECRUITER / HR",
+  });
+
+  // 1. Multi-fallback User Profile Loader (LocalStorage + API)
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      // Check multiple common storage keys for fallback
+      const possibleKeys = ["candidate_profile_draft", "userProfile", "user"];
+      
+      for (const key of possibleKeys) {
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            const foundName = parsed.fullName || parsed.name || parsed.userName;
+            const foundTitle = parsed.title || parsed.jobTitle || parsed.role;
+
+            if (foundName) {
+              setUserProfile({
+                fullName: foundName,
+                title: foundTitle || "SOFTWARE ENGINEER",
+              });
+              return; // Found valid data, exit early
+            }
+          } catch (e) {
+            console.error(`Error parsing ${key} from LocalStorage`, e);
+          }
+        }
+      }
+
+      // If LocalStorage is empty/invalid, fetch from ASP.NET Core API
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/api/CandidateProfile`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            // Take the first profile from backend database
+            setUserProfile({
+              fullName: data[0].fullName || "Recruiter Portal",
+              title: data[0].title || "RECRUITER / HR",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load user profile from API", err);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  // 2. Fetch All Candidates Data from ASP.NET Core API
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
@@ -138,6 +199,16 @@ export default function NewCandidatePage() {
     fetchCandidates();
   }, []);
 
+  // Helper: Get Initials for User Avatar
+  const getInitials = (name: string) => {
+    if (!name) return "RP";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   // Filter Logic
   const filteredCandidates = candidates.filter((candidate) => {
     const matchesSearch =
@@ -205,7 +276,7 @@ export default function NewCandidatePage() {
             placeholder="Search AI insights, candidate profiles, or skills..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none transition-all shadow-inner"
+            className="w-full border rounded-xl pl-11 pr-4 py-2.5 text-xs outline-none transition-all shadow-inner"
             style={{
               background: C.panelAlt,
               borderColor: C.border,
@@ -217,6 +288,7 @@ export default function NewCandidatePage() {
           </div>
         </div>
 
+        {/* Dynamic User Profile Badge */}
         <div className="flex items-center gap-4">
           <div
             className="relative p-2.5 rounded-xl shadow-inner shrink-0 cursor-pointer"
@@ -230,14 +302,14 @@ export default function NewCandidatePage() {
               className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md"
               style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}
             >
-              RP
+              {getInitials(userProfile.fullName)}
             </div>
             <div className="text-right hidden sm:block leading-tight">
               <div className="text-xs font-bold" style={{ color: C.text }}>
-                Recruiter Portal
+                {userProfile.fullName}
               </div>
-              <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>
-                RECRUITER / HR
+              <div className="text-[10px] font-semibold tracking-wider mt-0.5 uppercase" style={{ color: C.teal }}>
+                {userProfile.title}
               </div>
             </div>
           </div>
@@ -256,7 +328,6 @@ export default function NewCandidatePage() {
                 <Users size={32} style={{ color: C.teal }} />
                 Candidates Directory
               </h1>
-              
             </div>
           </div>
 

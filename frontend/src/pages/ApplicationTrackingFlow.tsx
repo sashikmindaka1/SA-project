@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import SideNav from "../components/common/SideNav"; // Make sure this path is correct!
+import SideNav from "../components/common/SideNav";
 
 // ---------------------------------------------------------------------------
 // Design tokens — Ultra-dark cinematic luxury theme
@@ -34,6 +34,8 @@ const C = {
   gold: "#D9B855",
   red: "#E0665A",
 } as const;
+
+const API_BASE_URL = "http://localhost:5016";
 
 export type ApplicationStatus =
   | "Applied"
@@ -153,10 +155,72 @@ export default function ApplicationTrackingnew() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
 
+  // Dynamic Profile Header State
+  const [userProfile, setUserProfile] = useState({
+    fullName: "Candidate User",
+    title: "CANDIDATE",
+  });
+
+  // Load User Profile dynamically from LocalStorage or Backend API
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const possibleKeys = ["candidate_profile_draft", "userProfile", "user"];
+      
+      for (const key of possibleKeys) {
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            const foundName = parsed.fullName || parsed.name || parsed.userName;
+            const foundTitle = parsed.title || parsed.jobTitle || parsed.role;
+
+            if (foundName) {
+              setUserProfile({
+                fullName: foundName,
+                title: (foundTitle || "CANDIDATE").toUpperCase(),
+              });
+              return;
+            }
+          } catch (e) {
+            console.error(`Error reading key ${key} from LocalStorage`, e);
+          }
+        }
+      }
+
+      // Fallback API Fetch
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_BASE_URL}/api/CandidateProfile`, {
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
+        });
+
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          setUserProfile({
+            fullName: response.data[0].fullName || "Candidate User",
+            title: (response.data[0].title || "CANDIDATE").toUpperCase(),
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load user profile from API", err);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  const getInitials = (name: string) => {
+    if (!name) return "CU";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   const fetchApplications = () => {
     setLoading(true);
     axios
-      .get("http://localhost:5016/api/Applications")
+      .get(`${API_BASE_URL}/api/Applications`)
       .then((res) => {
         setApplications(res.data);
         setLoading(false);
@@ -200,7 +264,7 @@ export default function ApplicationTrackingnew() {
   return (
     <div className="w-full min-h-screen flex flex-col font-sans" style={{ background: C.bg, color: C.text }}>
       
-      {/* Top Header matching Interview Manager */}
+      {/* Top Header */}
       <nav className="w-full px-10 py-5 border-b sticky top-0 z-20 backdrop-blur-md shadow-lg flex justify-between items-center" style={{ borderColor: C.border, background: `${C.bg}EE` }}>
         
         {/* Brand & Logo */}
@@ -227,7 +291,7 @@ export default function ApplicationTrackingnew() {
           </div>
         </div>
 
-        {/* Actions & Profile */}
+        {/* Actions & Dynamic Profile */}
         <div className="flex items-center gap-4">
           <button
             onClick={fetchApplications}
@@ -246,11 +310,11 @@ export default function ApplicationTrackingnew() {
 
           <div className="flex items-center gap-3 pl-3 border-l shrink-0" style={{ borderColor: C.border }}>
             <div className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md" style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}>
-              NL
+              {getInitials(userProfile.fullName)}
             </div>
             <div className="text-right hidden sm:block leading-tight">
-              <div className="text-xs font-bold" style={{ color: C.text }}>Nimsara Lakmal</div>
-              <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>CANDIDATE</div>
+              <div className="text-xs font-bold" style={{ color: C.text }}>{userProfile.fullName}</div>
+              <div className="text-[10px] font-semibold tracking-wider mt-0.5 uppercase" style={{ color: C.teal }}>{userProfile.title}</div>
             </div>
           </div>
         </div>
@@ -259,7 +323,7 @@ export default function ApplicationTrackingnew() {
       {/* Main Layout Area */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* Imported Reusable Sidebar */}
+        {/* Sidebar */}
         <SideNav />
 
         {/* Scrollable Content */}

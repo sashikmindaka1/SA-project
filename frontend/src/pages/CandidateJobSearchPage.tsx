@@ -32,6 +32,9 @@ const C = {
   teal: "#22d9d9",
 } as const;
 
+const API_BASE_URL = "http://localhost:5016";
+const SAVED_PROFILE_ID_KEY = "candidateProfileId";
+
 const WORK_MODES: WorkMode[] = ["On-site", "Hybrid", "Remote"];
 const EMPLOYMENT_TYPES: EmploymentType[] = ["Full-time", "Part-time", "Contract", "Internship"];
 const EXPERIENCE_LEVELS: ExperienceLevel[] = ["Entry", "Junior", "Mid", "Senior", "Lead"];
@@ -44,6 +47,83 @@ export default function CandidateJobSearchPage() {
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set()); // Applied Jobs Track කරන්න
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Dynamic Profile State
+  const [userProfile, setUserProfile] = useState({
+    fullName: "Candidate User",
+    title: "CANDIDATE",
+    photoUrl: null as string | null,
+  });
+
+  // Load User Profile dynamically from LocalStorage or Backend API
+  const loadUserProfile = async () => {
+    // 1. Try saved candidateProfileId first
+    const savedId = localStorage.getItem(SAVED_PROFILE_ID_KEY);
+    if (savedId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/CandidateProfile/${savedId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile({
+            fullName: data.fullName || "Candidate User",
+            title: (data.title || "CANDIDATE").toUpperCase(),
+            photoUrl: data.photoUrl ? `${API_BASE_URL}${data.photoUrl}` : null,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load profile by saved ID:", err);
+      }
+    }
+
+    // 2. Fallback to LocalStorage JSON items
+    const possibleKeys = ["candidate_profile_draft", "userProfile", "user", "candidate_profile"];
+    for (const key of possibleKeys) {
+      const savedData = localStorage.getItem(key);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          const foundName = parsed.fullName || parsed.name || parsed.userName;
+          const foundTitle = parsed.title || parsed.jobTitle || parsed.role;
+          const foundPhoto = parsed.photoUrl || parsed.avatar;
+
+          if (foundName) {
+            setUserProfile({
+              fullName: foundName,
+              title: (foundTitle || "CANDIDATE").toUpperCase(),
+              photoUrl: foundPhoto ? (foundPhoto.startsWith("http") ? foundPhoto : `${API_BASE_URL}${foundPhoto}`) : null,
+            });
+            return;
+          }
+        } catch (e) {
+          console.error(`Error reading key ${key} from LocalStorage`, e);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadUserProfile();
+
+    // Event listeners to sync updates dynamically
+    const handleStorageChange = () => loadUserProfile();
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("profileUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("profileUpdated", handleStorageChange);
+    };
+  }, []);
+
+  const getInitials = (name: string) => {
+    if (!name) return "CS";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -120,17 +200,27 @@ export default function CandidateJobSearchPage() {
 
         <div className="flex items-center gap-4">
           <div
-            className="p-2.5 rounded-xl border shrink-0 cursor-pointer"
+            className="p-2.5 rounded-xl border shrink-0 cursor-pointer transition-all hover:bg-white/5"
             style={{ background: C.panel, borderColor: C.border }}
           >
             <Bell size={18} style={{ color: C.textDim }} />
           </div>
           <div className="flex items-center gap-3 pl-3 border-l" style={{ borderColor: C.border }}>
             <div
-              className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold"
+              className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden shadow-md"
               style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}
             >
-              JS
+              {userProfile.photoUrl ? (
+                <img src={userProfile.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                getInitials(userProfile.fullName)
+              )}
+            </div>
+            <div className="text-right hidden sm:block leading-tight">
+              <div className="text-xs font-bold" style={{ color: C.text }}>{userProfile.fullName}</div>
+              <div className="text-[10px] font-semibold tracking-wider mt-0.5 uppercase" style={{ color: C.teal }}>
+                {userProfile.title}
+              </div>
             </div>
           </div>
         </div>
