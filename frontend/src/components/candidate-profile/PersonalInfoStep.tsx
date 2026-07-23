@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import Field from "../common/Field";
 import SectionCard from "../common/SectionCard";
@@ -11,6 +11,8 @@ interface PersonalInfoStepProps {
   onNext: (data: PersonalInfoData) => void;
 }
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
+
 export default function PersonalInfoStep({ defaultValues, onNext }: PersonalInfoStepProps) {
   const {
     register,
@@ -18,7 +20,41 @@ export default function PersonalInfoStep({ defaultValues, onNext }: PersonalInfo
     formState: { errors },
   } = useForm<PersonalInfoData>({ defaultValues });
 
-  const submit = (data: PersonalInfoData) => onNext(data);
+  const [photo, setPhoto] = useState<File | null>(defaultValues.photo ?? null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Build a preview URL whenever the photo changes, and clean up the old one.
+  useEffect(() => {
+    if (!photo) {
+      setPhotoUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(photo);
+    setPhotoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!selected) return;
+
+    if (!selected.type.startsWith("image/")) {
+      setPhotoError("Please choose an image file (JPG, PNG, etc.)");
+      return;
+    }
+    if (selected.size > MAX_PHOTO_BYTES) {
+      setPhotoError("Image must be smaller than 5MB");
+      return;
+    }
+
+    setPhotoError(null);
+    setPhoto(selected);
+  };
+
+  const submit = (data: PersonalInfoData) => onNext({ ...data, photo });
 
   const initials =
     defaultValues.fullName
@@ -31,7 +67,23 @@ export default function PersonalInfoStep({ defaultValues, onNext }: PersonalInfo
   return (
     <SectionCard title="Personal profile" subtitle="A streamlined profile recruiters see first">
       <form onSubmit={handleSubmit(submit)} className="flex flex-col gap-4">
-        <ProfileHeader initials={initials} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+          className="hidden"
+        />
+        <ProfileHeader
+          initials={initials}
+          photoUrl={photoUrl}
+          onChangePhoto={() => fileInputRef.current?.click()}
+        />
+        {photoError && (
+          <p className="text-xs -mt-3" style={{ color: COLORS.gold }}>
+            {photoError}
+          </p>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field

@@ -5,6 +5,8 @@ export interface PersonalInfoData {
   phone: string;
   location: string;
   yearsExperience: number;
+  /** Profile picture selected in Step 1. Not persisted to draft storage (see DraftableProfile). */
+  photo: File | null;
 }
 
 export interface SkillsData {
@@ -32,6 +34,7 @@ export const EMPTY_PROFILE: CandidateProfileFormData = {
   summary: "",
   skills: [],
   file: null,
+  photo: null,
 };
 
 export type StepId = "personal" | "skills" | "resume" | "review";
@@ -49,4 +52,4 @@ export const STEPS: StepDefinition[] = [
 ];
 
 /** Subset of the profile that's safe to persist — File objects can't be JSON-serialized. */
-export type DraftableProfile = Omit<CandidateProfileFormData, "file">;
+export type DraftableProfile = Omit<CandidateProfileFormData, "file" | "photo">;

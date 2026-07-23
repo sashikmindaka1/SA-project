@@ -72,6 +72,32 @@ namespace TalentFlow.API.Controllers
                 resumeUrl = $"/uploads/resumes/{resumeFileName}";
             }
 
+            string? photoFileName = null;
+            string? photoUrl = null;
+
+            if (dto.Photo != null)
+            {
+                var photoFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"),
+                    "uploads",
+                    "photos");
+
+                Directory.CreateDirectory(photoFolder);
+
+                photoFileName =
+                    $"{Guid.NewGuid()}_{dto.Photo.FileName}";
+
+                var photoPath =
+                    Path.Combine(photoFolder, photoFileName);
+
+                using (var stream = new FileStream(photoPath, FileMode.Create))
+                {
+                    await dto.Photo.CopyToAsync(stream);
+                }
+
+                photoUrl = $"/uploads/photos/{photoFileName}";
+            }
+
             var profile = new CandidateProfile
             {
                 FullName = dto.FullName,
@@ -84,6 +110,8 @@ namespace TalentFlow.API.Controllers
                 Skills = dto.Skills ?? "[]",
                 ResumeFileName = resumeFileName,
                 ResumeUrl = resumeUrl,
+                PhotoFileName = photoFileName,
+                PhotoUrl = photoUrl,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -99,9 +127,9 @@ namespace TalentFlow.API.Controllers
 
         // UPDATE PROFILE
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProfile(
+        public async Task<ActionResult<CandidateProfile>> UpdateProfile(
             int id,
-            [FromBody] CandidateProfile updated)
+            [FromForm] CandidateProfileDto dto)
         {
             var profile =
                 await _context.CandidateProfiles.FindAsync(id);
@@ -109,14 +137,62 @@ namespace TalentFlow.API.Controllers
             if (profile == null)
                 return NotFound();
 
-            profile.FullName = updated.FullName;
-            profile.Title = updated.Title;
-            profile.Email = updated.Email;
-            profile.Phone = updated.Phone;
-            profile.Location = updated.Location;
-            profile.YearsExperience = updated.YearsExperience;
-            profile.Summary = updated.Summary;
-            profile.Skills = updated.Skills;
+            if (dto.Resume != null)
+            {
+                var uploadFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"),
+                    "uploads",
+                    "resumes");
+
+                Directory.CreateDirectory(uploadFolder);
+
+                var resumeFileName =
+                    $"{Guid.NewGuid()}_{dto.Resume.FileName}";
+
+                var filePath =
+                    Path.Combine(uploadFolder, resumeFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Resume.CopyToAsync(stream);
+                }
+
+                profile.ResumeFileName = resumeFileName;
+                profile.ResumeUrl = $"/uploads/resumes/{resumeFileName}";
+            }
+
+            if (dto.Photo != null)
+            {
+                var photoFolder = Path.Combine(
+                    _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"),
+                    "uploads",
+                    "photos");
+
+                Directory.CreateDirectory(photoFolder);
+
+                var photoFileName =
+                    $"{Guid.NewGuid()}_{dto.Photo.FileName}";
+
+                var photoPath =
+                    Path.Combine(photoFolder, photoFileName);
+
+                using (var stream = new FileStream(photoPath, FileMode.Create))
+                {
+                    await dto.Photo.CopyToAsync(stream);
+                }
+
+                profile.PhotoFileName = photoFileName;
+                profile.PhotoUrl = $"/uploads/photos/{photoFileName}";
+            }
+
+            profile.FullName = dto.FullName;
+            profile.Title = dto.Title;
+            profile.Email = dto.Email;
+            profile.Phone = dto.Phone;
+            profile.Location = dto.Location;
+            profile.YearsExperience = dto.YearsExperience;
+            profile.Summary = dto.Summary;
+            profile.Skills = dto.Skills ?? profile.Skills;
             profile.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -156,5 +232,6 @@ namespace TalentFlow.API.Controllers
         public string? Skills { get; set; }
 
         public IFormFile? Resume { get; set; }
+        public IFormFile? Photo { get; set; }
     }
 }

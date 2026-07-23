@@ -20,6 +20,9 @@ namespace TalentFlow.API.Models
         public string? ResumeFileName { get; set; }
         public string? ResumeUrl { get; set; }
 
+        public string? PhotoFileName { get; set; }
+        public string? PhotoUrl { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
     }

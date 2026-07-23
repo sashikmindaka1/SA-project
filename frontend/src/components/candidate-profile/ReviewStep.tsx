@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, FileText, Pencil, CheckCircle2, AlertTriangle } from "lucide-react";
 import SectionCard from "../common/SectionCard";
 import { COLORS } from "../../constants/theme";
@@ -13,6 +13,7 @@ interface ReviewStepProps {
   isSubmitting: boolean;
   isSubmitted: boolean;
   onStartNewProfile: () => void;
+  submitError?: string | null;
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
@@ -47,7 +48,20 @@ export default function ReviewStep({
   isSubmitting,
   isSubmitted,
   onStartNewProfile,
+  submitError,
 }: ReviewStepProps) {
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile.photo) {
+      setPhotoPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(profile.photo);
+    setPhotoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [profile.photo]);
+
   if (isSubmitted) {
     return (
       <SectionCard title="Profile saved" subtitle="Your profile is live for recruiters to find">
@@ -87,6 +101,19 @@ export default function ReviewStep({
             <EditButton onClick={() => onEditStep("personal")} />
           </div>
           <div className="rounded-lg px-3 py-2" style={{ backgroundColor: COLORS.panelAlt, border: `1px solid ${COLORS.border}` }}>
+            {photoPreviewUrl && (
+              <div className="flex items-center gap-2.5 pb-2 mb-1" style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                <img
+                  src={photoPreviewUrl}
+                  alt="Profile photo"
+                  className="w-9 h-9 rounded-full object-cover"
+                  style={{ border: `1px solid ${COLORS.border}` }}
+                />
+                <span className="text-xs" style={{ color: COLORS.textSecondary }}>
+                  Profile photo added
+                </span>
+              </div>
+            )}
             <ReviewRow label="Full name" value={profile.fullName} />
             <ReviewRow label="Title" value={profile.title} />
             <ReviewRow label="Email" value={profile.email} />
@@ -165,6 +192,18 @@ export default function ReviewStep({
             <p className="text-xs" style={{ color: COLORS.textPrimary }}>
               No resume attached. Recruiters mainly discover candidates through resume matching —
               you can still submit, but adding one later will improve your visibility.
+            </p>
+          </div>
+        )}
+
+        {submitError && (
+          <div
+            className="flex items-start gap-2 rounded-lg px-3 py-2.5"
+            style={{ backgroundColor: "rgba(224,102,102,0.1)", border: `1px solid rgba(224,102,102,0.35)` }}
+          >
+            <AlertTriangle size={14} style={{ color: "#E06666" }} className="shrink-0 mt-0.5" />
+            <p className="text-xs" style={{ color: COLORS.textPrimary }}>
+              {submitError}
             </p>
           </div>
         )}

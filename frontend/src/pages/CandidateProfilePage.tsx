@@ -26,17 +26,21 @@ async function saveProfile(data: CandidateProfileFormData): Promise<void> {
   formData.append("location", data.location || "");
   formData.append("yearsExperience", data.yearsExperience.toString());
   formData.append("summary", data.summary || "");
-  
+
   formData.append("skills",
     JSON.stringify(data.skills || [])
   );
+
+  if (data.photo) {
+    formData.append("photo", data.photo);
+  }
 
   if (data.file) {
     formData.append("resume", data.file);
   }
 
   const API_BASE = "http://localhost:5016"; // Update if your backend port is different
-  
+
   console.log("Calling API:", `${API_BASE}/api/CandidateProfile`);
   const response = await fetch(`${API_BASE}/api/CandidateProfile`, {
     method: "POST",
@@ -59,6 +63,7 @@ export default function CandidateProfilePage() {
   const [profile, setProfile] = useState<CandidateProfileFormData>(EMPTY_PROFILE);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const hasLoadedDraft = useRef(false);
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export default function CandidateProfilePage() {
 
   useEffect(() => {
     if (!hasLoadedDraft.current || isSubmitted) return;
-    const { file, ...draftable } = profile;
+    const { file, photo, ...draftable } = profile;
     saveDraft(draftable);
   }, [profile, isSubmitted]);
 
@@ -89,23 +94,30 @@ export default function CandidateProfilePage() {
   };
 
   const handleFinalSubmit = async () => {
-  console.log("PROFILE:", profile);
+    console.log("PROFILE:", profile);
 
-  setIsSubmitting(true);
+    setSubmitError(null);
+    setIsSubmitting(true);
 
-  try {
-    await saveProfile(profile);
+    try {
+      await saveProfile(profile);
 
-    console.log("SUCCESS");
+      console.log("SUCCESS");
 
-    setIsSubmitted(true);
-    clearDraft();
-  } catch (error) {
-    console.error("SUBMIT ERROR:", error);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      setIsSubmitted(true);
+      clearDraft();
+    } catch (error) {
+      console.error("SUBMIT ERROR:", error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while saving your profile. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleStartNewProfile = () => {
     setIsSubmitted(false);
     setStep("personal");
@@ -136,6 +148,7 @@ export default function CandidateProfilePage() {
                   phone: profile.phone,
                   location: profile.location,
                   yearsExperience: profile.yearsExperience,
+                  photo: profile.photo,
                 }}
                 onNext={handlePersonalInfoNext}
               />
@@ -166,6 +179,7 @@ export default function CandidateProfilePage() {
                 isSubmitting={isSubmitting}
                 isSubmitted={isSubmitted}
                 onStartNewProfile={handleStartNewProfile}
+                submitError={submitError}
               />
             )}
           </div>
