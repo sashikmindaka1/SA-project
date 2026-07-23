@@ -15,6 +15,9 @@ import {
   Search,
   Sparkles,
   SlidersHorizontal,
+  Mail,
+  MapPin,
+  Briefcase,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -301,46 +304,93 @@ export default function SettingsPage() {
               style={{ background: C.panel, borderColor: C.border }}
             >
               
-              {/* Vertical Navigation Tabs */}
+              {/* Left Column: Navigation Tabs + Active Profile Display Card */}
               <div
-                className="w-full md:w-64 p-4 space-y-2 shrink-0 border-b md:border-b-0 md:border-r"
+                className="w-full md:w-72 p-5 flex flex-col justify-between shrink-0 border-b md:border-b-0 md:border-r"
                 style={{ background: C.panelAlt, borderColor: C.border }}
               >
-                <button
-                  onClick={() => { setActiveTab("profile"); setErrorMessage(""); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
-                  style={{
-                    background: activeTab === "profile" ? `${C.teal}20` : "transparent",
-                    color: activeTab === "profile" ? C.teal : C.textDim,
-                    border: `1px solid ${activeTab === "profile" ? `${C.teal}50` : "transparent"}`,
-                  }}
-                >
-                  <User size={16} /> Profile Details
-                </button>
+                <div className="space-y-2">
+                  <p className="text-[10px] font-extrabold uppercase tracking-widest px-2 mb-3" style={{ color: C.textDim }}>
+                    Menu Options
+                  </p>
+                  <button
+                    onClick={() => { setActiveTab("profile"); setErrorMessage(""); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
+                    style={{
+                      background: activeTab === "profile" ? `${C.teal}20` : "transparent",
+                      color: activeTab === "profile" ? C.teal : C.textDim,
+                      border: `1px solid ${activeTab === "profile" ? `${C.teal}50` : "transparent"}`,
+                    }}
+                  >
+                    <User size={16} /> Profile Details
+                  </button>
 
-                <button
-                  onClick={() => { setActiveTab("security"); setErrorMessage(""); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
-                  style={{
-                    background: activeTab === "security" ? `${C.teal}20` : "transparent",
-                    color: activeTab === "security" ? C.teal : C.textDim,
-                    border: `1px solid ${activeTab === "security" ? `${C.teal}50` : "transparent"}`,
-                  }}
-                >
-                  <Lock size={16} /> Security & Password
-                </button>
+                  <button
+                    onClick={() => { setActiveTab("security"); setErrorMessage(""); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
+                    style={{
+                      background: activeTab === "security" ? `${C.teal}20` : "transparent",
+                      color: activeTab === "security" ? C.teal : C.textDim,
+                      border: `1px solid ${activeTab === "security" ? `${C.teal}50` : "transparent"}`,
+                    }}
+                  >
+                    <Lock size={16} /> Security & Password
+                  </button>
 
-                <button
-                  onClick={() => { setActiveTab("notifications"); setErrorMessage(""); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
-                  style={{
-                    background: activeTab === "notifications" ? `${C.teal}20` : "transparent",
-                    color: activeTab === "notifications" ? C.teal : C.textDim,
-                    border: `1px solid ${activeTab === "notifications" ? `${C.teal}50` : "transparent"}`,
-                  }}
+                  <button
+                    onClick={() => { setActiveTab("notifications"); setErrorMessage(""); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
+                    style={{
+                      background: activeTab === "notifications" ? `${C.teal}20` : "transparent",
+                      color: activeTab === "notifications" ? C.teal : C.textDim,
+                      border: `1px solid ${activeTab === "notifications" ? `${C.teal}50` : "transparent"}`,
+                    }}
+                  >
+                    <Bell size={16} /> Notifications
+                  </button>
+                </div>
+
+                {/* Left Side Active User Profile Card */}
+                <div
+                  className="mt-8 p-4 rounded-xl border flex flex-col items-center text-center gap-3 shadow-lg"
+                  style={{ background: C.panel, borderColor: C.border }}
                 >
-                  <Bell size={16} /> Notifications
-                </button>
+                  <div
+                    className="h-16 w-16 rounded-full flex items-center justify-center text-lg font-extrabold shadow-md border"
+                    style={{
+                      background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`,
+                      color: C.text,
+                      borderColor: `${C.teal}40`,
+                    }}
+                  >
+                    {initials}
+                  </div>
+
+                  <div className="space-y-1 w-full">
+                    <h4 className="text-sm font-bold truncate" style={{ color: C.text }}>
+                      {profileData.fullName || "User Account"}
+                    </h4>
+                    <p className="text-[11px] font-semibold tracking-wider truncate" style={{ color: C.teal }}>
+                      {profileData.title || "ADMIN / RECRUITER"}
+                    </p>
+                  </div>
+
+                  <div className="w-full pt-3 border-t space-y-2 text-[11px]" style={{ borderColor: C.border, color: C.textDim }}>
+                    {profileData.email && (
+                      <div className="flex items-center gap-2 truncate">
+                        <Mail size={13} className="shrink-0" style={{ color: C.teal }} />
+                        <span className="truncate">{profileData.email}</span>
+                      </div>
+                    )}
+                    {profileData.location && (
+                      <div className="flex items-center gap-2 truncate">
+                        <MapPin size={13} className="shrink-0" style={{ color: C.teal }} />
+                        <span className="truncate">{profileData.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               {/* Form Content Panel */}

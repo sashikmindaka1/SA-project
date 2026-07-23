@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import SideNav from '../components/common/SideNav';
-import { Search, Bell, Brain, FileText, Target, TrendingUp, Zap, AlertCircle } from 'lucide-react';
+import { Search, Bell, Brain, FileText, Target, TrendingUp, Zap, AlertCircle, Loader2 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Design tokens — Ultra-dark cinematic luxury theme
@@ -34,38 +34,75 @@ interface RankedCandidate {
   parsedSkills: string[];
 }
 
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || "http://localhost:5016";
+
 export default function RecruiterRankingScreen() {
   const [kpis, setKpis] = useState<KpiData | null>(null);
   const [rankedCandidates, setRankedCandidates] = useState<RankedCandidate[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     setLoading(true);
     setError(null);
 
-    // Fetching dynamically from your backend API endpoints
+    // Dynamic API Requests
     Promise.all([
-      fetch("http://localhost:5016/api/aianalytics/kpis").then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch KPIs from backend");
-        return res.json();
-      }),
-      fetch("http://localhost:5016/api/aianalytics/ranking").then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch candidate rankings from backend");
-        return res.json();
-      }),
+      fetch(`${API_BASE}/api/aianalytics/kpis`).then((res) => res.ok ? res.json() : null).catch(() => null),
+      fetch(`${API_BASE}/api/aianalytics/ranking`).then((res) => res.ok ? res.json() : null).catch(() => null),
     ])
       .then(([kpiData, rankingData]) => {
-        setKpis(kpiData);
-        setRankedCandidates(rankingData);
+        if (!isMounted) return;
+
+        // 1. Process KPI Data
+        if (kpiData) {
+          setKpis({
+            totalCandidates: kpiData.totalCandidates ?? kpiData.TotalCandidates ?? 0,
+            avgMatchScore: kpiData.avgMatchScore ?? kpiData.AvgMatchScore ?? 0,
+            resumesParsed: kpiData.resumesParsed ?? kpiData.ResumesParsed ?? 0,
+            placementRate: kpiData.placementRate ?? kpiData.PlacementRate ?? 0,
+          });
+        }
+
+        // 2. Process Ranking Data
+        if (rankingData) {
+          const formattedCandidates: RankedCandidate[] = (rankingData || []).map((c: any) => ({
+            id: c.id ?? c.Id,
+            name: c.name ?? c.Name ?? "Unknown Candidate",
+            role: c.role ?? c.Role ?? "N/A",
+            matchScore: c.matchScore ?? c.MatchScore ?? 0,
+            parsedSkills: c.parsedSkills ?? c.ParsedSkills ?? [],
+          }));
+          setRankedCandidates(formattedCandidates);
+        }
+
         setLoading(false);
       })
       .catch((err) => {
+        if (!isMounted) return;
         console.error("Error communicating with backend:", err);
         setError("Failed to synchronize with backend services. Please ensure your C# API is running.");
         setLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Live Search Filter
+  const filteredCandidates = useMemo(() => {
+    if (!searchQuery.trim()) return rankedCandidates;
+    const q = searchQuery.toLowerCase();
+    return rankedCandidates.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.role.toLowerCase().includes(q) ||
+        c.parsedSkills.some((s) => s.toLowerCase().includes(q))
+    );
+  }, [rankedCandidates, searchQuery]);
 
   return (
     <div className="w-full min-h-screen flex flex-col font-sans" style={{ background: C.bg, color: C.text }}>
@@ -84,6 +121,8 @@ export default function RecruiterRankingScreen() {
         <div className="flex-1 max-w-xl mx-8 relative hidden md:block">
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search AI insights, rankings, or candidate metrics..." 
             className="w-full bg-[#121922] border border-[rgba(255,255,255,0.06)] rounded-xl pl-11 pr-4 py-2.5 text-sm text-[#FFFFFF] placeholder-[#5c7086] outline-none focus:border-[#22d9d9]/50 transition-all shadow-inner"
           />
@@ -92,29 +131,30 @@ export default function RecruiterRankingScreen() {
           </div>
         </div>
 
+        {/* Fully Hardcoded Profile Section */}
         <div className="flex items-center gap-4">
           <div className="relative p-2.5 rounded-xl shadow-inner shrink-0 cursor-pointer" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
             <Bell size={18} style={{ color: C.textDim }} />
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full" style={{ background: C.teal }}></span>
           </div>
+          
           <div className="flex items-center gap-3 pl-3 border-l shrink-0" style={{ borderColor: C.border }}>
             <div className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md" style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}>
-              NL
+              SM
             </div>
             <div className="text-right hidden sm:block leading-tight">
-              <div className="text-xs font-bold" style={{ color: C.text }}>Nimsara Lakmal</div>
-              <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>RECRUITER / AI</div>
+              <div className="text-xs font-bold" style={{ color: C.text }}>Sashik Mindaka</div>
+              <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>SOFTWARE ENGINEER</div>
             </div>
           </div>
         </div>
       </nav>
 
       <div className="flex flex-1 overflow-hidden">
-        
         {/* Child Sidebar Component */}
         <SideNav />
 
-        <main className="p-10 flex-1 overflow-y-auto">
+        <main className="p-8 md:p-10 flex-1 overflow-y-auto">
           
           {/* Header Section */}
           <div className="flex justify-between items-end pb-6 mb-6">
@@ -123,7 +163,9 @@ export default function RecruiterRankingScreen() {
                 <Brain size={32} style={{ color: C.teal }} />
                 AI Insights & Analytics
               </h1>
-              <p className="mt-1.5 text-sm" style={{ color: C.textDim }}>Automated resume parsing, intelligent skill extraction, and candidate-job matching algorithms.</p>
+              <p className="mt-1.5 text-sm" style={{ color: C.textDim }}>
+                Automated resume parsing, intelligent skill extraction, and candidate-job matching algorithms.
+              </p>
             </div>
           </div>
 
@@ -134,7 +176,7 @@ export default function RecruiterRankingScreen() {
             </div>
           )}
 
-          {/* KPI Metrics Ribbon (Dynamically bound to backend response) */}
+          {/* KPI Metrics Ribbon */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
             {[
               { label: 'Total Candidates', value: kpis ? kpis.totalCandidates : 0, icon: Target, color: "#3a86ff" },
@@ -153,13 +195,13 @@ export default function RecruiterRankingScreen() {
                   </div>
                 </div>
                 <div className="text-3xl font-extrabold tracking-tight relative z-10" style={{ color: kpi.color }}>
-                  {loading ? "..." : kpi.value}
+                  {loading ? <Loader2 size={24} className="animate-spin my-1" /> : kpi.value}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Recruiter AI Ranking Screen Section (Dynamically mapped from database response) */}
+          {/* Candidates Ranking Section */}
           <div className="rounded-2xl p-6 shadow-2xl" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
             <div className="flex items-center justify-between mb-6 pb-4 border-b" style={{ borderColor: C.border }}>
               <div>
@@ -170,17 +212,18 @@ export default function RecruiterRankingScreen() {
 
             <div className="space-y-4">
               {loading ? (
-                <div className="text-center py-16 text-sm" style={{ color: C.textDim }}>
-                  Fetching live data from database endpoints...
+                <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm" style={{ color: C.teal }}>
+                  <Loader2 size={30} className="animate-spin" />
+                  <span className="text-xs font-semibold" style={{ color: C.textDim }}>Fetching live data from database endpoints...</span>
                 </div>
-              ) : rankedCandidates.length === 0 ? (
+              ) : filteredCandidates.length === 0 ? (
                 <div className="text-center py-16 text-sm" style={{ color: C.textDim }}>
-                  No candidate records found in the database.
+                  {searchQuery ? "No matching candidate records found." : "No candidate records found in the database."}
                 </div>
               ) : (
-                rankedCandidates.map((candidate, index) => (
+                filteredCandidates.map((candidate, index) => (
                   <div 
-                    key={candidate.id} 
+                    key={candidate.id || index} 
                     className="flex items-center justify-between p-5 rounded-xl shadow-inner border flex-wrap gap-4 transition-all hover:border-[#22d9d9]/40" 
                     style={{ background: C.panelAlt, borderColor: C.border }}
                   >
@@ -193,7 +236,7 @@ export default function RecruiterRankingScreen() {
                         <div className="text-xs mt-0.5" style={{ color: C.textDim }}>{candidate.role}</div>
                         
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {candidate.parsedSkills?.map((skill) => (
+                          {(candidate.parsedSkills || []).map((skill) => (
                             <span
                               key={skill}
                               className="text-[10px] font-bold px-2.5 py-1 rounded-lg tracking-wide uppercase"

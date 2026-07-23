@@ -85,15 +85,15 @@ export default function RecruiterJobPostingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Live Filtering Logic
+  // Live Filtering
   const filteredJobs = useMemo(() => {
     if (!searchQuery.trim()) return jobs;
     const q = searchQuery.toLowerCase();
     return jobs.filter(
       (job) =>
-        job.title.toLowerCase().includes(q) ||
-        job.department.toLowerCase().includes(q) ||
-        job.location.toLowerCase().includes(q)
+        job.title?.toLowerCase().includes(q) ||
+        job.department?.toLowerCase().includes(q) ||
+        job.location?.toLowerCase().includes(q)
     );
   }, [jobs, searchQuery]);
 
@@ -166,7 +166,7 @@ export default function RecruiterJobPostingPage() {
 
   return (
     <div className="w-full min-h-screen flex flex-col font-sans" style={{ background: C.bg, color: C.text }}>
-      {/* Top Navigation Bar */}
+      {/* Top Nav Bar */}
       <nav
         className="w-full px-10 py-5 border-b sticky top-0 z-20 backdrop-blur-md shadow-lg flex justify-between items-center"
         style={{ borderColor: C.border, background: `${C.bg}EE` }}
@@ -197,6 +197,7 @@ export default function RecruiterJobPostingPage() {
           </div>
         </div>
 
+        {/* Updated Profile Section */}
         <div className="flex items-center gap-4">
           <div
             className="relative p-2.5 rounded-xl shadow-inner shrink-0 cursor-pointer"
@@ -210,21 +211,21 @@ export default function RecruiterJobPostingPage() {
               className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md overflow-hidden"
               style={{ background: `linear-gradient(135deg, #3c5a76, #1c2c3d)`, color: C.text }}
             >
-              HR
+              SM
             </div>
             <div className="text-right hidden sm:block leading-tight">
               <div className="text-xs font-bold" style={{ color: C.text }}>
-                Recruiter Admin
+                Sashik Mindaka
               </div>
               <div className="text-[10px] font-semibold tracking-wider mt-0.5" style={{ color: C.teal }}>
-                TALENT ACQUISITION
+                SOFTWARE ENGINEER
               </div>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Main Layout */}
+      {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         <SideNav />
 
@@ -379,7 +380,7 @@ function EmptyState({ onCreate, isSearching }: { onCreate: () => void; isSearchi
       </h3>
       <p className="mt-1 max-w-xs text-xs" style={{ color: C.textDim }}>
         {isSearching
-          ? "Try adjusting your search criteria or keywords."
+          ? "Try adjusting your search query."
           : "Post your first job role to initiate AI resume matching and receive candidates."}
       </p>
       {!isSearching && (
@@ -536,11 +537,11 @@ function JobFormPanel({
               <input
                 type="number"
                 className="tf-input"
-                value={form.salary?.min ?? 0}
+                value={form.salary?.min || ""}
                 onChange={(e) =>
                   setForm((f) => ({
                     ...f,
-                    salary: { ...f.salary, min: Number(e.target.value) || 0 },
+                    salary: { ...f.salary, min: e.target.value ? Number(e.target.value) : 0 },
                   }))
                 }
               />
@@ -549,11 +550,11 @@ function JobFormPanel({
               <input
                 type="number"
                 className="tf-input"
-                value={form.salary?.max ?? 0}
+                value={form.salary?.max || ""}
                 onChange={(e) =>
                   setForm((f) => ({
                     ...f,
-                    salary: { ...f.salary, max: Number(e.target.value) || 0 },
+                    salary: { ...f.salary, max: e.target.value ? Number(e.target.value) : 0 },
                   }))
                 }
               />
@@ -660,6 +661,28 @@ function JobFormPanel({
           </button>
         </div>
       </div>
+
+      {/* Input styles */}
+      <style>{`
+        .tf-input {
+          width: 100%;
+          background: ${C.panelAlt};
+          border: 1px solid ${C.border};
+          border-radius: 0.75rem;
+          padding: 0.65rem 0.85rem;
+          font-size: 0.8125rem;
+          color: ${C.text};
+          outline: none;
+          transition: all 0.2s ease;
+        }
+        .tf-input:focus {
+          border-color: ${C.teal};
+          box-shadow: 0 0 0 1px ${C.teal}40;
+        }
+        .tf-input::placeholder {
+          color: ${C.textDim};
+        }
+      `}</style>
     </div>
   );
 }
