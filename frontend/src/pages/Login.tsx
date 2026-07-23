@@ -63,7 +63,8 @@ const Login = () => {
 
   if (userRole === 'HIRING_MANAGER' || userRole === 'RECRUITER' || userRole === 'MANAGER') {
 
-    navigate('/manager/dashboard');
+    localStorage.setItem("isLoggedIn", "true");
+      navigate("/dashboard");
   } else if (userRole === 'CANDIDATE') {
 
     navigate('/candidate/profile');

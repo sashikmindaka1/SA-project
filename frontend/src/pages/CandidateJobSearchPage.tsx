@@ -27,7 +27,7 @@ export default function CandidateJobSearchPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Job | null>(null);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
