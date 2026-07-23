@@ -34,16 +34,19 @@ import {
 
 
 
-const INK = "#1A2126";
-const PANEL = "#212B33";
-const PANEL2 = "#283441";
-const STEEL = "#27668C";
-const CYAN = "#0CF2F2";
-const TEAL = "#2CBFBF";
-const GOLD = "#D9B855";
-const LINE = "#33404B";
-const TXT = "#E7EDF0";
-const TXTDIM = "#8B9AA5";
+const INK = "#080c10";                  // mapped from C.bg
+const PANEL = "#0d1318";                // mapped from C.panel
+const PANEL2 = "#121922";               // mapped from C.panelAlt
+const STEEL = "#27668C";                // mapped from C.blue
+const CYAN = "#22d9d9";                 // mapped from C.teal (your new main accent)
+const TEAL = "#22d9d9";                 // mapped from C.teal
+const GOLD = "#D9B855";                 // mapped from C.gold
+const LINE = "rgba(255,255,255,0.06)";  // mapped from C.border
+const TXT = "#FFFFFF";                  // mapped from C.text
+const TXTDIM = "#5c7086";               // mapped from C.textDim
+
+// I also added your new red just in case you need it for error states:
+const RED = "#E0665A";                  // mapped from C.red
 
 type Level = "Junior" | "Mid" | "Senior";
 type Decision = "applied" | "ignored" | undefined;
