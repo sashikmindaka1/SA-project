@@ -256,9 +256,7 @@ export default function NewCandidatePage() {
                 <Users size={32} style={{ color: C.teal }} />
                 Candidates Directory
               </h1>
-              <p className="mt-1.5 text-sm" style={{ color: C.textDim }}>
-                Managing database profiles dynamically from TalentFlow API (<code style={{ color: C.teal }}>/api/CandidateProfile</code>).
-              </p>
+              
             </div>
           </div>
 
