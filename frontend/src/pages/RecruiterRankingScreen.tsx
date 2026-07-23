@@ -20,10 +20,10 @@ const C = {
 } as const;
 
 interface KpiData {
-  TotalCandidates: number;
-  AvgMatchScore: number;
-  ResumesParsed: number;
-  PlacementRate: number;
+  totalCandidates: number;
+  avgMatchScore: number;
+  resumesParsed: number;
+  placementRate: number;
 }
 
 interface RankedCandidate {
@@ -137,10 +137,10 @@ export default function RecruiterRankingScreen() {
           {/* KPI Metrics Ribbon (Dynamically bound to backend response) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
             {[
-              { label: 'Total Candidates', value: kpis ? kpis.TotalCandidates : 0, icon: Target, color: "#3a86ff" },
-              { label: 'Avg Match Score', value: kpis ? `${kpis.AvgMatchScore}%` : "0%", icon: Zap, color: C.teal },
-              { label: 'Resumes Parsed', value: kpis ? kpis.ResumesParsed : 0, icon: FileText, color: C.gold },
-              { label: 'Placement Rate', value: kpis ? `${kpis.PlacementRate}%` : "0%", icon: TrendingUp, color: "#00f5d4" },
+              { label: 'Total Candidates', value: kpis ? kpis.totalCandidates : 0, icon: Target, color: "#3a86ff" },
+              { label: 'Avg Match Score', value: kpis ? `${kpis.avgMatchScore}%` : "0%", icon: Zap, color: C.teal },
+              { label: 'Resumes Parsed', value: kpis ? kpis.resumesParsed : 0, icon: FileText, color: C.gold },
+              { label: 'Placement Rate', value: kpis ? `${kpis.placementRate}%` : "0%", icon: TrendingUp, color: "#00f5d4" },
             ].map((kpi, index) => (
               <div key={index} className="rounded-2xl p-6 shadow-2xl relative overflow-hidden transition-all group" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
                 <div className="absolute -right-3 -bottom-3 opacity-[0.04] transition-transform group-hover:scale-110 pointer-events-none">
