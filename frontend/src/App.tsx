@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import SettingsPage from "./pages/SettingsPage";
 
 import CandidateProfilePage from "./pages/CandidateProfilePage";
 import HiringManagerDashboard from "./pages/HiringManagerDashboard";
@@ -72,6 +73,10 @@ function App() {
           path="/candidates"
           element={<ApplicationTrackingFlow />}
         />
+
+        <Route path="/settings" element={<SettingsPage />} 
+        />
+        
 
         {/* Fallback */}
         <Route
