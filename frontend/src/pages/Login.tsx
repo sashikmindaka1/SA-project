@@ -47,8 +47,10 @@ const Login = () => {
       }
 
       // Store JWT token and user profile in browser local storage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify(data.user));
+
+navigate("/dashboard");
 
       setSuccessMsg('Login successful! Redirecting...');
       

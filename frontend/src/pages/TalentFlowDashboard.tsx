@@ -66,8 +66,8 @@ interface Job {
   equity: string;
 }
 
-interface CurrentUser {
-  name: string;
+ interface CurrentUser {
+  fullName: string;
   email: string;
 }
 
@@ -1607,7 +1607,7 @@ function CandidateView({
         >
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: TXT, margin: 0 }}>
-              Welcome back, {user.name.split(" ")[0]}
+              Welcome back, {user.fullName?.split(" ")[0]}
             </h1>
             <p style={{ color: TXTDIM, fontSize: 13, margin: "4px 0 0" }}>
               Here's how your job search is tracking this week.
@@ -1665,10 +1665,10 @@ function CandidateView({
                   flexShrink: 0,
                 }}
               >
-                {user.name.split(" ").map((n) => n[0]).join("")}
+                {user.fullName?.split(" ").map((n) => n[0]).join("")}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: TXT, fontSize: 15 }}>{user.name}</div>
+                <div style={{ fontWeight: 700, color: TXT, fontSize: 15 }}>{user.fullName}</div>
                 <div style={{ color: TXTDIM, fontSize: 12.5 }}>{user.email}</div>
               </div>
               <FileText size={17} color={TXTDIM} />
@@ -1815,14 +1815,10 @@ function CandidateView({
 /* ---------------- ROOT ---------------- */
 export default function TalentFlowDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<CurrentUser | null>(
-  localStorage.getItem("isLoggedIn")
-    ? {
-        name: "User",
-        email: "user@gmail.com",
-      }
-    : null
-);
+  const [user, setUser] = useState<CurrentUser | null>(() => {
+  const storedUser = localStorage.getItem("user");
+  return storedUser ? JSON.parse(storedUser) : null;
+});
   const [decisions, setDecisions] = useState<Decisions>({});
   const [saved, setSaved] = useState<SavedMap>({});
   const [screen, setScreen] = useState<"landing" | "jobs">("landing");
@@ -1910,46 +1906,52 @@ export default function TalentFlowDashboard() {
                   color: INK,
                 }}
               >
-                {user.name.split(" ").map((n) => n[0]).join("")}
+                {user.fullName?.split(" ").map((n: string) => n[0]).join("")}
               </div>
             </>
           )}
-          {user ? (
-            <button
-              onClick={() => setUser(null)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 14px",
-                borderRadius: 9,
-                border: `1px solid ${LINE}`,
-                background: "transparent",
-                color: TXTDIM,
-                fontSize: 12.5,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <LogOut size={14} /> Log out
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate("/login")}
-              style={{
-                padding: "9px 18px",
-                borderRadius: 9,
-                border: "none",
-                background: `linear-gradient(135deg, ${CYAN}, ${STEEL})`,
-                color: INK,
-                fontSize: 13,
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Log in
-            </button>
-          )}
+          
+ {user ? (
+  <button
+    onClick={() => {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      setUser(null);
+    }}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      padding: "8px 14px",
+      borderRadius: 9,
+      border: `1px solid ${LINE}`,
+      background: "transparent",
+      color: TXTDIM,
+      fontSize: 12.5,
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    <LogOut size={14} /> Log out
+  </button>
+) : (
+  <button
+    onClick={() => navigate("/login")}
+    style={{
+      padding: "9px 18px",
+      borderRadius: 9,
+      border: "none",
+      background: `linear-gradient(135deg, ${CYAN}, ${STEEL})`,
+      color: INK,
+      fontSize: 13,
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    Log in
+  </button>
+)}
+          
         </div>
       </header>
 
