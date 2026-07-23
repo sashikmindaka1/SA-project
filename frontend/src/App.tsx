@@ -13,6 +13,7 @@ import CandidateJobSearchPage from "./pages/CandidateJobSearchPage";
 import RecruiterJobPostingPage from "./pages/RecruiterJobPostingPage";
 import NewCandidatePage from "./pages/NewCandidatePage";
 import TalentFlowDashboard from "./pages/TalentFlowDashboard";
+import RecruiterRankingScreen from "./pages/RecruiterRankingScreen"; // <-- Added Member 05's AI Analytics Screen
 
 function App() {
   return (
@@ -63,6 +64,12 @@ function App() {
           element={<HiringManagerDashboard />}
         />
 
+        {/* AI Insights & Analytics (Member 05's Module) */}
+        <Route
+          path="/analytics"
+          element={<RecruiterRankingScreen />}
+        />
+
         {/* Applications */}
         <Route
           path="/applications"
@@ -77,7 +84,6 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} 
         />
         
-
         {/* Fallback */}
         <Route
           path="*"
